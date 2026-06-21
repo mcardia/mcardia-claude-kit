@@ -29,6 +29,12 @@ Authority flows top-down: **ADRs > standards > reference docs > running system**
 derive from ADRs and never override them. Deep-research is evidence that feeds
 decisions; it is never an authority.
 
+`/sdd-generators:spec` begins by **scanning the repository for existing documentation**
+— PRD, ADRs, standards/methodology, reference and data-model docs, API/wire contracts,
+C4/Mermaid diagrams, and sibling specs — then shows a short context map and confirms it
+before the interview. It cites and references those authorities rather than restating
+them, so you do not need to paste them in by hand.
+
 ## Using a generator
 
 Invoke the command, answer the interview one question at a time, and the tool emits the
