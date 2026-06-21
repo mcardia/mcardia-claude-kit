@@ -1,5 +1,4 @@
 ---
-name: SDD PRD
 description: "Interview that generates a Product Requirements Document: problem, goals and metrics, scope, behavior, and non-functional targets."
 disable-model-invocation: true
 ---

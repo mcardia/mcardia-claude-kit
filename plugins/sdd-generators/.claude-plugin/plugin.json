@@ -1,7 +1,7 @@
 {
   "name": "sdd-generators",
   "description": "Interview-style generators for SDD governance and design documents",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "author": {
     "name": "Mario Cardia"
   }

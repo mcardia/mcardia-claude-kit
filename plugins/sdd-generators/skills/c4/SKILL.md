@@ -1,5 +1,4 @@
 ---
-name: SDD C4 Diagrams
 description: Generate C4 PlantUML diagrams from a feature spec.
 disable-model-invocation: true
 ---

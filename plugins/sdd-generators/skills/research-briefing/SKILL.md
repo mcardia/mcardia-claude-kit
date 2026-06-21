@@ -1,5 +1,4 @@
 ---
-name: SDD Deep-Research Briefing
 description: Interview that scopes a deep-research briefing to feed candidate ADRs.
 disable-model-invocation: true
 ---

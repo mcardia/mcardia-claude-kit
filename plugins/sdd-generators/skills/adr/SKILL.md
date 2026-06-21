@@ -1,5 +1,4 @@
 ---
-name: SDD ADR
 description: "Interview that generates a single Architecture Decision Record: context, options, decision, and trade-offs."
 disable-model-invocation: true
 ---
