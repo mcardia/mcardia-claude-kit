@@ -1,0 +1,6 @@
+{
+  "name": "dependency-auditor",
+  "description": "Read-only dependency health and security audit aligned with the project dependency-currency policy",
+  "version": "1.0.0",
+  "author": { "name": "Mario Cardia" }
+}
