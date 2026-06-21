@@ -1,3 +1,9 @@
+---
+name: SDD Deep-Research Document
+description: Interview that produces a deep-research document, the evidence that ADRs cite.
+disable-model-invocation: true
+---
+
 # Prompt to Generate a Deep Research Document (Phase 2)
 
 You are a technical editor and documentation architect.

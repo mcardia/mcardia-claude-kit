@@ -35,8 +35,13 @@ Wesley Willians) in the README — its patterns inspired this work.
 - **Marketplace name:** `mcardia-claude-kit`.
 - **GitHub slug:** `mcardia/mcardia-claude-kit` (repo currently
   `mcardia/sdd-generators` — see Phase E for the rename).
-- **Source of truth for generators:** they live **once**, inside
-  `plugins/sdd-generators/generators/`. No root copies, so no drift gate is needed.
+- **Source of truth for generators:** each generator lives **once**, as the body of a
+  skill at `plugins/sdd-generators/skills/<name>/SKILL.md` (YAML frontmatter prepended,
+  body byte-for-byte unchanged). No root copies, no thin launchers, no drift gate.
+  Rationale: `${CLAUDE_PLUGIN_ROOT}` is not substituted in skill markdown bodies (only
+  in shell/hook/MCP contexts), so a launcher-by-path design is unreliable; merging the
+  generator into the skill body is the robust documented approach. Plugin skills are
+  invoked namespaced as `/sdd-generators:<name>`.
 - **`bootstrap.sh` is removed** — the marketplace replaces its `_generators/` copy
   purpose.
 
@@ -96,17 +101,15 @@ mcardia-claude-kit/                       (repo root = the marketplace)
 ├── plugins/
 │   ├── sdd-generators/
 │   │   ├── .claude-plugin/plugin.json
-│   │   ├── commands/
-│   │   │   ├── sdd-constitution.md
-│   │   │   ├── sdd-prd.md
-│   │   │   ├── sdd-adr.md
-│   │   │   ├── sdd-spec.md
-│   │   │   ├── sdd-research-briefing.md
-│   │   │   ├── sdd-research-document.md
-│   │   │   ├── sdd-c4.md
-│   │   │   └── sdd-mermaid.md
-│   │   ├── generators/                   (canonical 01..08 — single source of truth)
-│   │   │   ├── 01-constitution.md … 08-mermaid.md
+│   │   ├── skills/                       (each SKILL.md = frontmatter + generator body)
+│   │   │   ├── constitution/SKILL.md     (/sdd-generators:constitution)
+│   │   │   ├── prd/SKILL.md              (/sdd-generators:prd)
+│   │   │   ├── adr/SKILL.md              (/sdd-generators:adr)
+│   │   │   ├── spec/SKILL.md             (/sdd-generators:spec)
+│   │   │   ├── research-briefing/SKILL.md
+│   │   │   ├── research-document/SKILL.md
+│   │   │   ├── c4/SKILL.md
+│   │   │   └── mermaid/SKILL.md
 │   │   └── USAGE.md
 │   └── dependency-auditor/
 │       ├── .claude-plugin/plugin.json
@@ -149,20 +152,12 @@ Confirm current Claude Code plugin conventions against the official docs (spawn 
 
 If any assumed token differs from the docs, use the documented form and note it.
 
-### 7.2 Move generators into the plugin (single source of truth)
+### 7.2 Move each generator into a skill (single source of truth)
 
-```sh
-mkdir -p plugins/sdd-generators/generators
-git mv 01-constitution.md          plugins/sdd-generators/generators/01-constitution.md
-git mv 02-prd.md                   plugins/sdd-generators/generators/02-prd.md
-git mv 03-adr.md                   plugins/sdd-generators/generators/03-adr.md
-git mv 04-spec.md                  plugins/sdd-generators/generators/04-spec.md
-git mv 05-deep-research-briefing.md plugins/sdd-generators/generators/05-deep-research-briefing.md
-git mv 06-deep-research-document.md plugins/sdd-generators/generators/06-deep-research-document.md
-git mv 07-c4.md                    plugins/sdd-generators/generators/07-c4.md
-git mv 08-mermaid.md               plugins/sdd-generators/generators/08-mermaid.md
-git rm bootstrap.sh
-```
+For each root generator: `git mv` it to `plugins/sdd-generators/skills/<name>/SKILL.md`
+(preserves history), then prepend YAML frontmatter — keeping the original body
+byte-for-byte unchanged (only frontmatter + one blank line are added on top). Finally
+`git rm bootstrap.sh`. Mapping in 7.4. Verify each body is byte-exact against `HEAD`.
 
 ### 7.3 Marketplace + plugin manifests
 
@@ -201,37 +196,30 @@ Create with `Write`:
    }
    ```
 
-### 7.4 One thin command launcher per generator
+### 7.4 Generator → skill mapping
 
-For each generator create `plugins/sdd-generators/commands/<cmd>.md`. The body MUST
-NOT contain generator prose — it loads and runs the canonical copy. Mapping:
-
-| Command file | Slash command | Loads |
+| Root generator | Skill path | Invocation |
 |---|---|---|
-| `sdd-constitution.md` | `/sdd-constitution` | `generators/01-constitution.md` |
-| `sdd-prd.md` | `/sdd-prd` | `generators/02-prd.md` |
-| `sdd-adr.md` | `/sdd-adr` | `generators/03-adr.md` |
-| `sdd-spec.md` | `/sdd-spec` | `generators/04-spec.md` |
-| `sdd-research-briefing.md` | `/sdd-research-briefing` | `generators/05-deep-research-briefing.md` |
-| `sdd-research-document.md` | `/sdd-research-document` | `generators/06-deep-research-document.md` |
-| `sdd-c4.md` | `/sdd-c4` | `generators/07-c4.md` |
-| `sdd-mermaid.md` | `/sdd-mermaid` | `generators/08-mermaid.md` |
+| `01-constitution.md` | `skills/constitution/SKILL.md` | `/sdd-generators:constitution` |
+| `02-prd.md` | `skills/prd/SKILL.md` | `/sdd-generators:prd` |
+| `03-adr.md` | `skills/adr/SKILL.md` | `/sdd-generators:adr` |
+| `04-spec.md` | `skills/spec/SKILL.md` | `/sdd-generators:spec` |
+| `05-deep-research-briefing.md` | `skills/research-briefing/SKILL.md` | `/sdd-generators:research-briefing` |
+| `06-deep-research-document.md` | `skills/research-document/SKILL.md` | `/sdd-generators:research-document` |
+| `07-c4.md` | `skills/c4/SKILL.md` | `/sdd-generators:c4` |
+| `08-mermaid.md` | `skills/mermaid/SKILL.md` | `/sdd-generators:mermaid` |
 
-Template (adjust description/tags per generator):
+Frontmatter prepended to each (body unchanged below it):
 ```markdown
 ---
+name: <Display Name>
 description: <one-line purpose of this generator>
-tags: [sdd, <constitution|prd|adr|spec|research|diagrams>]
+disable-model-invocation: true
 ---
-
-Read the generator at `${CLAUDE_PLUGIN_ROOT}/generators/<NN-name>.md` and adopt its
-full content as your operating prompt for this session. Then run the interview exactly
-as that prompt specifies — one question at a time — and emit the documents in the
-standard format it defines.
-
-User's starting context (optional): $ARGUMENTS
 ```
-(Use the verified argument token from 7.1 if `$ARGUMENTS` is not correct.)
+`disable-model-invocation: true` keeps each interview user-triggered only (Claude never
+auto-starts it). Command name comes from the skill directory name, namespaced by the
+plugin; the frontmatter `name` is the display label.
 
 ### 7.5 Plugin USAGE.md
 
@@ -346,13 +334,14 @@ directory. This is an operator/`gh` action — confirm before performing.
 ## 12. Validation (before opening the PR)
 
 1. **JSON validity:** every `*.json` manifest parses (e.g. `python3 -m json.tool`).
-2. **No duplication:** each `commands/sdd-*.md` references `${CLAUDE_PLUGIN_ROOT}` and
-   contains no generator prose (it should be short).
-3. **Single source:** the 8 generators exist only under
-   `plugins/sdd-generators/generators/`; none remain at repo root; `bootstrap.sh` gone.
+2. **Single source / no duplication:** each generator exists exactly once, as the body
+   of `plugins/sdd-generators/skills/<name>/SKILL.md`; the body is byte-exact against
+   the original (`diff` HEAD vs. SKILL.md minus its 6 frontmatter lines).
+3. **Clean root:** no generators remain at repo root; `bootstrap.sh` gone.
 4. **Install smoke test:** in a scratch Claude Code session, add the local marketplace
-   path, install both plugins, confirm `/sdd-constitution` loads its generator and
-   starts the interview, and `/dependency-audit` launches the subagent.
+   path, install both plugins, confirm `/sdd-generators:constitution` loads its
+   generator and starts the interview, and `/dependency-auditor:dependency-audit`
+   launches the subagent.
 5. **English-only + no effort estimates** across all new/changed files.
 
 ---
@@ -385,9 +374,10 @@ directory. This is an operator/`gh` action — confirm before performing.
 
 - [ ] `.claude-plugin/marketplace.json` names `mcardia-claude-kit`, lists both
       plugins, and parses.
-- [ ] `sdd-generators` plugin: 8 `/sdd-*` thin-launcher commands; generators live only
-      under `plugins/sdd-generators/generators/`; no prose duplication.
-- [ ] `dependency-auditor` plugin: `/dependency-audit` + read-only subagent with
+- [ ] `sdd-generators` plugin: 8 `/sdd-generators:<name>` skills, each = frontmatter +
+      the original generator body (byte-exact); no duplication; no thin launchers.
+- [ ] `dependency-auditor` plugin: `/dependency-auditor:dependency-audit` + read-only
+      subagent with
       thresholds matching the global Dependency Management policy.
 - [ ] README documents marketplace install, the per-project `settings.json` snippet,
       the three scopes, retained paste-prompt usage, and credits the upstream.

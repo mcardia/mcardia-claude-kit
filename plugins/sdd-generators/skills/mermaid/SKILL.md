@@ -1,3 +1,9 @@
+---
+name: SDD Mermaid Diagrams
+description: Generate high-value Mermaid diagrams from a feature spec.
+disable-model-invocation: true
+---
+
 # Prompt to Generate Mermaid Diagrams from a Spec (Subagent / Command)
 
 > This is a prompt that can run in Claude Code or any AI agent. It generates Mermaid diagrams from an SDD spec, not from a legacy FDD.

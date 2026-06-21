@@ -1,3 +1,9 @@
+---
+name: SDD C4 Diagrams
+description: Generate C4 PlantUML diagrams from a feature spec.
+disable-model-invocation: true
+---
+
 # Prompt to Generate C4 Diagrams from a Spec (Subagent / Command)
 
 > This is a prompt that can run in Claude Code or any AI agent. It generates C4 diagrams in PlantUML from an SDD spec, not from a legacy FDD.

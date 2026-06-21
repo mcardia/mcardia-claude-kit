@@ -1,3 +1,9 @@
+---
+name: SDD Spec
+description: Interview that generates a feature's spec, plan, and tasks (WHAT then HOW then tasks).
+disable-model-invocation: true
+---
+
 # Interview Prompt to Generate a Spec (SDD: spec + plan + tasks)
 
 # Objective

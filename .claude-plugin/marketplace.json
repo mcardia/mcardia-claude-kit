@@ -1,0 +1,20 @@
+{
+  "name": "mcardia-claude-kit",
+  "owner": { "name": "Mario Cardia" },
+  "description": "Mario Cardia's Claude Code kit: Spec-Driven Development generators and architecture tooling",
+  "version": "1.0.0",
+  "plugins": [
+    {
+      "name": "sdd-generators",
+      "description": "Interview-style generators for SDD governance and design documents (constitution, PRD, ADR, spec, deep-research, C4, Mermaid)",
+      "source": "./plugins/sdd-generators",
+      "version": "1.0.0"
+    },
+    {
+      "name": "dependency-auditor",
+      "description": "Read-only dependency health and security audit aligned with the project dependency-currency policy",
+      "source": "./plugins/dependency-auditor",
+      "version": "1.0.0"
+    }
+  ]
+}
