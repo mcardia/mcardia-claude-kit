@@ -1,5 +1,4 @@
 ---
-name: SDD Mermaid Diagrams
 description: Generate high-value Mermaid diagrams from a feature spec.
 disable-model-invocation: true
 ---

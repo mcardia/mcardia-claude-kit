@@ -1,5 +1,4 @@
 ---
-name: SDD Deep-Research Document
 description: Interview that produces a deep-research document, the evidence that ADRs cite.
 disable-model-invocation: true
 ---

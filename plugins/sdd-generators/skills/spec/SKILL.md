@@ -1,5 +1,4 @@
 ---
-name: SDD Spec
 description: Interview that generates a feature's spec, plan, and tasks (WHAT then HOW then tasks).
 disable-model-invocation: true
 ---
