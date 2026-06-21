@@ -1,6 +1,6 @@
 ---
 name: SDD Constitution
-description: Interview that generates the SDD constitution (methodology.md + AGENTS.md): method pillars, source-of-truth hierarchy, and artifact taxonomy.
+description: "Interview that generates the SDD constitution (methodology.md + AGENTS.md): method pillars, source-of-truth hierarchy, and artifact taxonomy."
 disable-model-invocation: true
 ---
 
