@@ -46,13 +46,17 @@ claude plugin marketplace update mcardia-claude-kit      # refresh the marketpla
 claude plugin update sdd-generators@mcardia-claude-kit   # update the installed plugin to the new version
 ```
 
-`claude plugin update` prints **"Restart to apply changes."** To apply without a full
-restart, in the running session run:
+`claude plugin update` prints **"Restart to apply changes."** **Restarting Claude Code
+is the reliable, version-independent way to apply the update** — a running session keeps
+the version it started with, so an update on disk only takes effect on restart.
 
-- `/reload-plugins` — reloads plugins, skills, **agents**, hooks and plugin MCP servers
+Recent CLI versions also expose in-session reload commands, but they may be absent on
+older builds (and a running session predating the update will not have them) — treat
+them as an optional shortcut, not a guarantee:
+
+- `/reload-plugins` — reloads plugins, skills, agents, hooks and plugin MCP servers
   (add `--force` if it warns about invalidating the MCP tool cache).
-- `/reload-skills` — reloads standalone skills/commands only (does **not** pick up new
-  agents).
+- `/reload-skills` — reloads standalone skills/commands only (does not pick up new agents).
 
 Verify with `/plugin` and `/agents`.
 
