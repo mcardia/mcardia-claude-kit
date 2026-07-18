@@ -189,6 +189,8 @@ Important JSON rules:
 
 Generate **three files**. Render each exactly. They reference ADRs, standards, reference docs, and contracts; they never restate them.
 
+**Template installation (first run in a project):** if `specs/.template/` does not exist, also write `specs/.template/{spec,plan,tasks}.md` — skeleton versions of the three templates below with `<placeholder>` slots and one-line authoring guidance per section (cross-feature criterion markers, exception blocks, one-red-green-cycle task granularity). Future authoring waves — human or agent — start from those files instead of rediscovering the format, and the project constitution should register the directory in its artifact taxonomy.
+
 ### Output Template A — `spec.md`
 
 ```markdown
