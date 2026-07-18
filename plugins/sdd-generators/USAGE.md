@@ -24,6 +24,9 @@ roughly in this order.
 | `/sdd-generators:research-document` | a deep-research document | the evidence (not authority) that ADRs cite |
 | `/sdd-generators:c4` | C4 PlantUML diagrams | architecture diagrams from a spec |
 | `/sdd-generators:mermaid` | Mermaid diagrams | high-value diagrams from a spec |
+| `/sdd-generators:traceability` | `docs/traceability.md` | requirement/criterion/target → owning spec/task; cross-feature criteria registry |
+| `/sdd-generators:doclint` | `scripts/check-docs.sh` | project-tailored docs lint: dead references, stale markers, name drift, coverage, diagram integrity |
+| `/sdd-generators:readiness-audit` | audit verdict + fix plan | multi-lens agent audit → cross-verified fix plan → fresh-eyes re-verification that declares READY |
 
 Authority flows top-down: **ADRs > standards > reference docs > running system**. Specs
 derive from ADRs and never override them. Deep-research is evidence that feeds
@@ -42,3 +45,14 @@ document(s) in the standard format — and, on request, a JSON twin with English
 
 Each generator is also a plain prompt: open its `skills/<name>/SKILL.md`, skip the YAML
 frontmatter, and paste the body into any AI tool.
+
+## Registered agents
+
+The plugin registers six subagents usable directly (or by the skills that orchestrate
+them): `c4-diagram-generator` and `mermaid-diagram-generator` (diagram authoring),
+`docs-auditor` (lens-based corpus audits for `/sdd-generators:readiness-audit`),
+`cascade-reviewer` and `cascade-validator` (stages 1 and 2 of the cascade code review;
+the coordinating session is stage 3), and `sdd-executor` (one `tasks.md` task per spawn,
+strict TDD, honoring the project's model-assignment standard). Each pins its model and
+reasoning effort in its definition, so spawns do not silently inherit a lower session
+effort.
