@@ -345,7 +345,22 @@ Each document type is the **single authority** over a defined set of facts and
 
 ---
 
-## 5. What this repository does NOT have yet
+## 5. Amendment protocol
+
+Once a documentation body is declared READY, any change to a spec, ADR, PRD,
+or standard carries its synchronization duties in the same work stage:
+
+- [docs lint run, if the project has one]
+- [regeneration of the affected feature's diagrams when behavior or structure changed]
+- [traceability-matrix update when a requirement/criterion/task mapping moved]
+- [this document's keep-current rule]
+
+A document change committed without its synchronization duties is an
+incomplete stage.
+
+---
+
+## 6. What this repository does NOT have yet
 
 Do not invent any of these. Add them only when a real feature or decision
 triggers them.
