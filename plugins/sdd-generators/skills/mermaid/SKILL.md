@@ -41,7 +41,7 @@ Invoke the mermaid-diagram-generator subagent with the spec folder path.
 
 Extract from arguments:
 - Spec folder (required): `specs/<feature>/` containing spec.md and plan.md.
-- Output folder (optional, default `docs/mermaid`).
+- Output folder (optional, default `specs/<feature>/diagrams`).
 - `--registry` (optional, default `architecture/diagrams/naming-registry.md`): C4 naming registry to read for canonical names.
 
 Pass:
