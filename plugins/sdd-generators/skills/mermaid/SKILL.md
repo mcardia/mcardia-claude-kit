@@ -13,7 +13,7 @@ This skill owns **behavior and relationships** — sequence, state, flowchart, c
 
 ## Naming authority (single source of truth)
 
-If a C4 **platform naming registry** exists (default `docs/c4/platform/naming-registry.md`, overridable), it is the single source of truth for names. Name sequence **participants** and class/ER **entities** from its `alias`/`label` values **verbatim**, so behavioral diagrams never invent divergent names for things the C4 model already named.
+If a C4 **platform naming registry** exists (default `architecture/diagrams/naming-registry.md`, overridable), it is the single source of truth for names. Name sequence **participants** and class/ER **entities** from its `alias`/`label` values **verbatim**, so behavioral diagrams never invent divergent names for things the C4 model already named.
 
 ## Input (read first)
 
@@ -42,7 +42,7 @@ Invoke the mermaid-diagram-generator subagent with the spec folder path.
 Extract from arguments:
 - Spec folder (required): `specs/<feature>/` containing spec.md and plan.md.
 - Output folder (optional, default `docs/mermaid`).
-- `--registry` (optional, default `docs/c4/platform/naming-registry.md`): C4 naming registry to read for canonical names.
+- `--registry` (optional, default `architecture/diagrams/naming-registry.md`): C4 naming registry to read for canonical names.
 
 Pass:
 

@@ -11,8 +11,8 @@ disable-model-invocation: true
 
 A run has exactly one **scope**. Take it from the task prompt; default to `feature`.
 
-- **`platform`** — author the canonical **C1 (System Context) + C2 (Container)** **once** for the whole project. Source them from the project's **ADRs** and **architecture overview** (e.g. `AGENTS.md` or an architecture doc), **not** from any single feature spec. Also emit the **naming registry** (below). Output to the platform diagrams folder (default `docs/c4/platform`, overridable).
-- **`feature`** — author **C3 (Component)** for one feature from its `spec.md` + `plan.md`. By default **skip C1/C2** when a platform model already exists; generate them only as a fallback when no platform model is found. **C4 (Code)** only when code-level detail is present. Output to the feature diagrams folder (default `docs/c4`, overridable).
+- **`platform`** — author the canonical **C1 (System Context) + C2 (Container)** **once** for the whole project. Source them from the project's **ADRs** and **architecture overview** (e.g. `AGENTS.md` or an architecture doc), **not** from any single feature spec. Also emit the **naming registry** (below). Output to the platform diagrams folder (default `architecture/diagrams`, overridable).
+- **`feature`** — author **C3 (Component)** for one feature from its `spec.md` + `plan.md`. By default **skip C1/C2** when a platform model already exists; generate them only as a fallback when no platform model is found. **C4 (Code)** only when code-level detail is present. Output to the feature diagrams folder (default `specs/<feature>/diagrams`, overridable).
 
 Generating C1/C2 per feature would produce N drifting copies of the same picture — the contradiction this corpus forbids. That is why C1/C2 live at platform scope and C3 reuses them.
 
@@ -25,7 +25,7 @@ This skill never emits behavioral diagrams; `sdd-mermaid` never emits C4 structu
 
 ## Naming authority (single source of truth)
 
-The `platform` run writes a **naming registry**: the canonical list of system/container aliases → labels (with kind, technology, description). Every later run — `feature` C3 here, and all `sdd-mermaid` participants/entities — **reuses those aliases and labels verbatim**, so an implementing AI agent is never handed two divergent names for the same thing. Default registry path: `docs/c4/platform/naming-registry.md` (overridable).
+The `platform` run writes a **naming registry**: the canonical list of system/container aliases → labels (with kind, technology, description). Every later run — `feature` C3 here, and all `sdd-mermaid` participants/entities — **reuses those aliases and labels verbatim**, so an implementing AI agent is never handed two divergent names for the same thing. Default registry path: `architecture/diagrams/naming-registry.md` (overridable).
 
 ## Input (read first)
 
@@ -59,8 +59,8 @@ Extract from arguments:
 - Source (required):
   - platform: the architecture sources — ADRs folder + architecture overview (e.g. `AGENTS.md`).
   - feature: the spec folder `specs/<feature>/` containing spec.md and plan.md.
-- Output folder (optional): default `docs/c4/platform` for platform, `docs/c4` for feature.
-- `--registry` (optional, default `docs/c4/platform/naming-registry.md`): naming-registry path to write (platform) or read (feature).
+- Output folder (optional): default `architecture/diagrams` for platform, `specs/<feature>/diagrams` for feature.
+- `--registry` (optional, default `architecture/diagrams/naming-registry.md`): naming-registry path to write (platform) or read (feature).
 - `--no-images` (optional): skip PNG generation.
 
 Pass (platform):
