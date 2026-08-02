@@ -10,7 +10,7 @@
       "name": "sdd-generators",
       "description": "Interview-style generators for SDD governance and design documents (constitution, PRD, ADR, spec, deep-research, C4, Mermaid, traceability, doclint, readiness-audit)",
       "source": "./plugins/sdd-generators",
-      "version": "1.4.0"
+      "version": "1.4.1"
     },
     {
       "name": "dependency-auditor",
