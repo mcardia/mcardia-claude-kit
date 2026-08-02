@@ -9,7 +9,7 @@ disable-model-invocation: true
 
 Decide, with evidence, whether a documentation corpus is **READY** for implementation — and, when it is not, drive it there. This skill orchestrates the cycle; the auditing itself is done by independent `docs-auditor` subagents (registered by this plugin).
 
-READY means: internally consistent (no document contradicts another), complete (nothing mandated is owned by nothing), and current (no stale claims) — verified by an agent that did not make the fixes.
+READY means: internally consistent (no document contradicts another), complete (nothing mandated is owned by nothing), and current (no stale claims). It also means no agent-judgment call stands in for a check a script could make (harness), and no more complexity than the corpus's current scope needs (over-engineering) — verified by an agent that did not make the fixes.
 
 ## When to run
 
@@ -34,13 +34,15 @@ If `docs/standards/VERIFICATION.md` (or the project's equivalent) does not exist
 
 ### 2. Audit
 
-Spawn **N ≥ 2 independent `docs-auditor` agents in parallel**, one per lens:
+Spawn **N ≥ 4 independent `docs-auditor` agents in parallel**, one per lens:
 
 - **consistency** — cross-document contradictions: names vs the canonical authority, execution order, ownership, cross-references, decision attributions.
 - **completeness** — unowned mandates: every PRD requirement traced, every ADR-delegated detail landing in a spec, every cited artifact created by some task, every criterion verifiable or explicitly re-scoped.
+- **harness** — the mechanical/inferential boundary: decisions the corpus leaves to agent judgment that a script, lint, or gate could verify deterministically instead; guides or sensors missing that an agent would need to stay aligned with architecture and maintenance expectations.
+- **over-engineering** — complexity beyond what the corpus's current scope needs: unnecessary abstraction, over-specification, over-security, or premature optimization that could be simplified without losing essential functionality.
 - Additional lenses when the surface warrants (security, terminology, test-coverage).
 
-Each brief names the lens, the scope, and the corpus root — nothing of the session's own beliefs.
+Each brief names the lens, the scope, and the corpus root — nothing of the session's own beliefs. Each lens's findings are self-contained, with no assumptions about another lens's results, and no lens invades another's scope. The orchestrating session reads no agent's output until the full batch returns, so step 3's cross-verification isn't anchored by whichever brief lands first.
 
 ### 3. Cross-verify
 
