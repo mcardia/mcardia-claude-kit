@@ -17,4 +17,9 @@ files without asking me anything:
 - Non-functional target: p95 API latency under 200 ms.
 - Out of scope for now: mobile app, multi-currency.
 
-Write the spec for FR-001 (import bank CSV), slug `csv-import`.
+First write `docs/adr/adr-001-datastore.md`: PostgreSQL as Ledger's primary datastore,
+chosen over SQLite and MySQL, with row-level security for per-team isolation. It is the
+decision the spec must cite rather than re-decide.
+
+Then write the spec for FR-001 (import bank CSV), slug `csv-import`. Do not ask me
+anything.

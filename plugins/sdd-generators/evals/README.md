@@ -12,10 +12,14 @@ claude plugin eval plugins/sdd-generators \
   --max-cost-usd 60
 ```
 
-Target the plugin **by path**, not by name: a name target resolves the *installed*
-copy of the plugin, which is a different version and carries no `evals/` directory —
-the suite would score something other than this working tree. Results land in
+Target the plugin **by path**, not by name. `evals/` ships inside the plugin root, so a
+name target does not error — it silently resolves the *installed* snapshot and scores
+that instead of this working tree, which is the worse failure. Results land in
 `plugins/sdd-generators/evals/results/<timestamp>/`.
+
+`--allow-tools` is the operator grant for **gated** tools only (`Bash`, `Write`, `Edit`,
+`WebFetch`, `mcp__*`). `Skill`, `Agent`, `Read`, `Glob` and `Grep` are not gated, so they
+are governed by each case's own `allowed_tools` and need no grant here.
 
 The ceiling is deliberately loose: 9 cases x `runs: 3` x 2 ablation arms is ~54 agent
 runs, and hitting `--max-cost-usd` aborts mid-suite with exit 2 and partial results.

@@ -15,4 +15,7 @@ First create this corpus exactly as described, then build the matrix from it:
 - `specs/csv-import/spec.md`: owns FR-001.
 - `specs/categorise/spec.md`: owns FR-002.
 
-Nothing owns FR-003. Write the matrix to `docs/traceability.md`.
+Nothing owns FR-003.
+
+Do not ask me anything. Where the skill would confirm a gap with me, state the gap in
+your final response instead and proceed. Write the matrix to `docs/traceability.md`.

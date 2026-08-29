@@ -18,4 +18,5 @@ First create this corpus and commit it, so the lint has tracked documents to sca
 - `docs/adr/adr-001-datastore.md`: PostgreSQL as the primary datastore.
 - `specs/csv-import/spec.md`: owns FR-001, lives in `ledger-import`, cites ADR-001.
 
-Then author the lint and run it once against this corpus.
+Do not ask me anything — derive the configuration from the corpus above, state what you
+derived, and proceed. Then author the lint and run it once against this corpus.
