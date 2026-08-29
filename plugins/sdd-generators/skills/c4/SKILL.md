@@ -1,6 +1,7 @@
 ---
 description: "Generate C4 PlantUML diagrams: platform scope (canonical C1+C2 from ADRs) or feature scope (C3 from a spec)."
 disable-model-invocation: true
+model: opus
 ---
 
 # Generator: C4 structural diagrams from an SDD corpus

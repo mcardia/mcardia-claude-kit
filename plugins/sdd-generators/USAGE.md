@@ -26,8 +26,7 @@ roughly in this order.
 | `/sdd-generators:readiness-audit` | audit verdict + fix plan | multi-lens agent audit → cross-verified fix plan → fresh-eyes re-verification that declares READY |
 
 Authority flows top-down: **ADRs > standards > reference docs > running system**. Specs
-derive from ADRs and never override them. Deep-research is evidence that feeds
-decisions; it is never an authority.
+derive from ADRs and never override them.
 
 `/sdd-generators:spec` begins by **scanning the repository for existing documentation**
 — PRD, ADRs, standards/methodology, reference and data-model docs, API/wire contracts,

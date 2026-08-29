@@ -42,8 +42,7 @@ roughly in this order. See [plugins/sdd-generators/USAGE.md](plugins/sdd-generat
 | `/sdd-generators:readiness-audit` | audit verdict + fix plan | multi-lens agent audit → cross-verified fix plan → fresh-eyes re-verification |
 
 Authority flows top-down: **ADRs > standards > reference docs > running system**. Specs
-derive from ADRs and never override them. Deep-research is evidence that feeds
-decisions; it is never an authority.
+derive from ADRs and never override them.
 
 ### What `sdd-generators` deliberately does not do
 

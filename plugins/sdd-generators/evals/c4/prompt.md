@@ -17,5 +17,12 @@ files without asking me anything:
 - Non-functional target: p95 API latency under 200 ms.
 - Out of scope for now: mobile app, multi-currency.
 
-Treat the context above as the architecture source (ADRs + overview). Use the
-default output folder `architecture/diagrams` and the default registry path.
+First write the architecture source to disk, since this generator reads files:
+
+- `AGENTS.md`: the project context above, as the architecture overview.
+- `docs/adr/adr-001-stack.md`: Go API, PostgreSQL, React web app, SSO via an
+  external identity provider.
+
+Then run with `<source>` = the ADRs folder plus `AGENTS.md`, the default output
+folder `architecture/diagrams`, and the default registry path. Do not ask me
+anything.
