@@ -54,7 +54,7 @@ were removed from the plugin because a built-in already does them — use the bu
 | Job | Use this built-in instead | Removed from the plugin |
 |---|---|---|
 | Review a diff before it merges | `/code-review` (`low`…`max`), `/code-review ultra` for a multi-agent cloud review of a branch or PR | `cascade-reviewer` |
-| Validate a review's findings (which are real, which are over-flagged, what was missed) | `/code-review`'s own verify pass — it reports each finding as `CONFIRMED` or `PLAUSIBLE` | `cascade-validator` |
+| Validate a review's findings against the design corpus (ADRs, standards, specs) | **No built-in does this** — it is a project-policy step, so it belongs in the consuming project's own `.claude/agents/`, not in a cross-project plugin. `/code-review`'s verify pass is a different axis: it rules a finding `CONFIRMED`/`PLAUSIBLE` against the *code*, not against the corpus | `cascade-validator` |
 | Security review of pending changes | `/security-review` | — |
 | Execute tasks as orchestrated multi-agent work | the **Workflow** tool (phases, `pipeline()`, `parallel()`, resume that reuses unchanged agent calls) and the **Agent** tool for a single task | `sdd-executor` |
 | Author Mermaid behavior diagrams (sequence, state, flowchart, class, ER) | Claude writes Mermaid from a spec unaided; Artifacts render ` ```mermaid ` fences natively, and the built-in `artifact-diagramming` skill covers when a diagram earns its place | `mermaid`, `mermaid-diagram-generator` |
