@@ -25,7 +25,7 @@ The spec set owns **per-feature design**: the feature's behavior and acceptance,
 
 It does **not** own and must **not** define:
 
-- **Architectural decisions** — owned by ADRs. The spec **cites** the ADRs that authorize its approach. If no ADR backs a needed decision, stop and author one with generator `03-adr` first.
+- **Architectural decisions** — owned by ADRs. The spec **cites** the ADRs that authorize its approach. If no ADR backs a needed decision, stop and author one with `/sdd-generators:adr` first.
 - **Product intent** (problem, goals at product level) — owned by the PRD. The spec cites it.
 - **Schema, columns, wire-shapes** — owned by reference docs and contracts. The plan **references** them; it registers needed schema changes rather than redefining the model.
 
@@ -112,7 +112,7 @@ For `tasks.md` (only after plan is agreed):
 
 4. Backing decisions
 
-   Which ADRs authorize the approach, using the ADRs found in Phase 0. If a needed decision has no ADR, stop and flag a required ADR (generator `03-adr`) before planning.
+   Which ADRs authorize the approach, using the ADRs found in Phase 0. If a needed decision has no ADR, stop and flag a required ADR (`/sdd-generators:adr`) before planning.
 
    Confirm spec.md, then proceed.
 

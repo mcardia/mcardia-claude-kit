@@ -34,7 +34,7 @@ If `docs/standards/VERIFICATION.md` (or the project's equivalent) does not exist
 
 ### 2. Audit
 
-Spawn **N ≥ 4 independent `docs-auditor` agents in parallel**, one per lens: **consistency**, **completeness**, **harness**, **over-engineering**, plus any additional lens the surface warrants (security, terminology, test-coverage). The `docs-auditor` agent definition is the single authority on what each lens means — name the lens in the brief, do not restate it here.
+Spawn **N ≥ 4 independent `docs-auditor` agents in parallel**, one per lens: **consistency**, **completeness**, **harness**, **over-engineering**, plus any additional lens the surface warrants (security, terminology, test-coverage). The `docs-auditor` agent definition is the single authority on those four lenses — name the lens in the brief and do not restate it here. An **additional** lens has no definition in the agent, so a brief that asks for one must define it verbatim.
 
 Each brief names the lens, the scope, and the corpus root — nothing of the session's own beliefs. Each lens's findings are self-contained, with no assumptions about another lens's results, and no lens invades another's scope. The orchestrating session reads no agent's output until the full batch returns, so step 3's cross-verification isn't anchored by whichever brief lands first.
 

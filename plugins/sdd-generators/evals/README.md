@@ -5,12 +5,20 @@ One minimal case per surviving component of `sdd-generators`, so the question
 argument.
 
 ```sh
-claude plugin eval sdd-generators \
+claude plugin eval plugins/sdd-generators \
   --ablation with-without \
   --allow-tools Bash Write Edit \
   --judge-model sonnet \
-  --max-cost-usd 15
+  --max-cost-usd 60
 ```
+
+Target the plugin **by path**, not by name: a name target resolves the *installed*
+copy of the plugin, which is a different version and carries no `evals/` directory —
+the suite would score something other than this working tree. Results land in
+`plugins/sdd-generators/evals/results/<timestamp>/`.
+
+The ceiling is deliberately loose: 9 cases x `runs: 3` x 2 ablation arms is ~54 agent
+runs, and hitting `--max-cost-usd` aborts mid-suite with exit 2 and partial results.
 
 `--judge-model` matters: every scored `llm` grader carries the discipline signal,
 and the default judge is haiku. Judge at sonnet tier or above, or the rubrics get

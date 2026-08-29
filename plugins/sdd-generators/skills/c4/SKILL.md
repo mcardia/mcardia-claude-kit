@@ -9,6 +9,22 @@ Generate C4 structural diagrams in PlantUML from an SDD corpus.
 
 Usage: `/sdd-generators:c4 [--scope=platform|feature] <source> [output-folder] [--registry=PATH] [--no-images]`
 
+## Arguments (bind these first)
+
+- `--scope` — `platform` or `feature`. Default `feature`.
+- `<source>` (required) — for `platform`, the architecture sources: the ADRs folder plus
+  the architecture overview (e.g. `AGENTS.md`). For `feature`, the spec folder
+  `specs/<feature>/` containing spec.md and plan.md.
+- `[output-folder]` — default `architecture/diagrams` for `platform`,
+  `specs/<feature>/diagrams` for `feature`.
+- `--registry=PATH` — the naming registry to write (`platform`) or read (`feature`).
+  Default `architecture/diagrams/naming-registry.md`.
+- `--no-images` — skip PNG generation.
+
+Below, `[output]` means the resolved output folder and `[registry]` the resolved registry
+path. `[name]` is the feature slug under `feature` scope and `platform` under `platform`
+scope — every output file is named `[name]-c[N]`.
+
 ## Scope (decide first)
 
 A run has exactly one **scope**. Take it from the arguments; default to `feature`.
@@ -35,9 +51,9 @@ The `platform` run writes the **naming registry**: the canonical list of system/
 2. Generate **C1 (System Context)** and **C2 (Container)** for the whole project.
 3. Write the canonical **naming registry** (below) listing every system/container alias → label.
 4. Call the Write tool for:
-   - `[platform-output]/platform-c1.puml`
-   - `[platform-output]/platform-c2.puml`
-   - `[registry-path]` (the naming registry, Markdown — NO PlantUML code)
+   - `[output]/[name]-c1.puml`
+   - `[output]/[name]-c2.puml`
+   - `[registry]` (the naming registry, Markdown — NO PlantUML code)
 
    If you do not Write the .puml files and the registry, the task failed.
 
@@ -48,10 +64,10 @@ The `platform` run writes the **naming registry**: the canonical list of system/
 3. **C1/C2**: skip them when a platform model (or registry) already exists — C3 must connect to the registry's containers by their canonical aliases. Generate C1/C2 here **only as a fallback** when no platform model is found, and say so in the report.
 4. Reuse registry `alias`/`label` values **verbatim** for every system/container a C3 component talks to. Never coin a new alias for something already in the registry.
 5. Call the Write tool for each generated level:
-   - `[output]/[feature]-c3.puml`
-   - `[output]/[feature]-c4.puml` (only if C4 generated)
-   - `[output]/[feature]-c4.md` (analysis only, NO PlantUML code)
-   - fallback only (no platform model found): `[output]/[feature]-c1.puml`, `[output]/[feature]-c2.puml`
+   - `[output]/[name]-c3.puml`
+   - `[output]/[name]-c4.puml` (only if C4 generated)
+   - `[output]/[name]-c4.md` (analysis only, NO PlantUML code)
+   - fallback only (no platform model found): `[output]/[name]-c1.puml`, `[output]/[name]-c2.puml`
 
    If you generate a level but do not Write its .puml file, the task failed.
 
@@ -98,14 +114,14 @@ After writing all files: re-read the sources and every .puml, list inconsistenci
 ## PNG generation (unless `--no-images`)
 
 1. Check availability: `plantuml -version`. If absent, report it with install instructions (`apt-get install plantuml` or `brew install plantuml`) and continue without failing the task.
-2. Render each generated level: `plantuml [output]/[feature]-c[N].puml` (produces the matching .png).
+2. Render each generated level: `plantuml [output]/[name]-c[N].puml` (produces the matching .png).
 3. On a syntax error, do not skip the diagram: read the error, fix the .puml with the Edit tool, and re-run, up to 3 attempts per file. Common causes: SHOW_LEGEND() in the C4 code level, unbalanced parentheses, invalid relationship syntax.
 4. After 3 failed attempts on a file, log it and move on.
 
 ## Report
 
 - Scope (platform | feature) and detected language.
-- List of created files (.puml, .md, and the registry for platform).
+- List of created files (.puml, and for `feature` the `[name]-c4.md` analysis; for `platform` the registry).
 - For feature: whether C1/C2 were skipped (platform model found) or generated as a fallback.
 - Skipped levels with reasons.
 - "Created N .puml files for N diagrams."

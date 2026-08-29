@@ -26,8 +26,8 @@ The PRD is the single authority over **product intent**: problem, goals and metr
 The PRD does **not** own and must **not** define:
 
 - **Architecture, components, topology** — owned by ADRs. The PRD may state a constraint ("must keep the door open for real-time"), never a design.
-- **Technical decisions and trade-offs** — owned by ADRs. If the user raises one, capture it as a *candidate ADR* (to be authored with generator `03-adr`), do not record the decision in the PRD.
-- **Per-feature technical design, flows, contracts** — owned by the spec/plan (generator `04-spec`).
+- **Technical decisions and trade-offs** — owned by ADRs. If the user raises one, capture it as a *candidate ADR* (to be authored with `/sdd-generators:adr`), do not record the decision in the PRD.
+- **Per-feature technical design, flows, contracts** — owned by the spec/plan (`/sdd-generators:spec`).
 - **Data model, schema, wire-shapes** — owned by reference docs and contracts.
 
 This boundary is the anti-drift rule from the Constitution applied to the PRD: one authority per fact. The PRD references decisions and designs; it never duplicates them.
@@ -66,7 +66,7 @@ You must ensure you capture:
 - Product and delivery risks with probability, impact, mitigation (multiple subitems allowed), and contingency. Technical/architectural risks go to the relevant ADR instead.
 - An objective acceptance-criteria checklist.
 - The validation and test strategy at a product level.
-- A list of **candidate ADRs**: decisions the user mentioned that must be authored separately with generator `03-adr`.
+- A list of **candidate ADRs**: decisions the user mentioned that must be authored separately with `/sdd-generators:adr`.
 
 ## Interview Process
 
@@ -112,7 +112,7 @@ You must ensure you capture:
 
 11. Candidate ADRs
 
-    Collect every architecture/decision topic the user raised, as a list of titles to be authored with generator `03-adr`. Do not resolve them here.
+    Collect every architecture/decision topic the user raised, as a list of titles to be authored with `/sdd-generators:adr`. Do not resolve them here.
 
 At each stage: ask specific questions, summarize, confirm before continuing.
 
@@ -325,7 +325,7 @@ Validation strategy
 
 ## Candidate ADRs
 
-Decisions raised during this PRD, to be authored separately (generator `03-adr`).
+Decisions raised during this PRD, to be authored separately (`/sdd-generators:adr`).
 The PRD will reference them once they exist; it does not resolve them here.
 
 - [candidate decision title 1]

@@ -1,6 +1,6 @@
 ---
 name: docs-auditor
-description: Impartial single-lens auditor of an SDD documentation corpus (consistency, completeness, or a custom lens named in the brief); also the fresh re-verification agent after a fix plan executes. Used by /sdd-generators:readiness-audit.
+description: Impartial single-lens auditor of an SDD documentation corpus. Defines the consistency, completeness, harness and over-engineering lenses, and runs a custom lens defined verbatim in the brief; also the fresh re-verification agent after a fix plan executes. Used by /sdd-generators:readiness-audit.
 model: opus
 effort: medium
 color: red

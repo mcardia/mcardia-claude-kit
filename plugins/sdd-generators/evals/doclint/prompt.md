@@ -1,5 +1,5 @@
 ---
-max_turns: 40
+max_turns: 45
 timeout_seconds: 900
 allowed_tools: [Skill, Write, Edit, Read, Glob, Grep, Bash]
 runs: 3
@@ -7,15 +7,15 @@ runs: 3
 
 /sdd-generators:doclint
 
-Project context — answer every interview question yourself from it and write the
-files without asking me anything:
+First create this corpus and commit it, so the lint has tracked documents to scan:
 
-- Product: "Ledger", a self-hosted expense tracker for small teams.
-- Stack decided: Go API, PostgreSQL, React web app, SSO via an external IdP.
-- Requirements: FR-001 import bank CSV; FR-002 categorise a transaction;
-  FR-003 export a monthly report.
-- Non-functional target: p95 API latency under 200 ms.
-- Out of scope for now: mobile app, multi-currency.
+- `git init`, then after writing the files `git add -A` and
+  `git -c user.email=eval@example.invalid -c user.name=Eval commit -m corpus`.
+- `AGENTS.md`: Ledger, a self-hosted expense tracker. Canonical module names are
+  `ledger-api`, `ledger-web`, `ledger-import`. The project forbids MySQL outside
+  exclusion phrasing. Stack: Go API, PostgreSQL, React web app.
+- `docs/prd.md`: FR-001 import bank CSV; FR-002 categorise a transaction.
+- `docs/adr/adr-001-datastore.md`: PostgreSQL as the primary datastore.
+- `specs/csv-import/spec.md`: owns FR-001, lives in `ledger-import`, cites ADR-001.
 
-Canonical module names are `ledger-api`, `ledger-web`, `ledger-import`.
-The project forbids MySQL outside exclusion phrasing.
+Then author the lint and run it once against this corpus.

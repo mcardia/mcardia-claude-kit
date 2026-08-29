@@ -3,3 +3,4 @@ tmp-cloud-mkt-place/
 
 # Eval runner output (traces, reports, aggregate-result.json)
 plugins/sdd-generators/evals/results/
+evals/results/
