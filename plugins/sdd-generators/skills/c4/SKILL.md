@@ -1,12 +1,13 @@
 ---
 description: "Generate C4 PlantUML diagrams: platform scope (canonical C1+C2 from ADRs) or feature scope (C3 from a spec)."
 disable-model-invocation: true
-model: opus
 ---
 
 # Generator: C4 structural diagrams from an SDD corpus
 
 Generate C4 structural diagrams in PlantUML from an SDD corpus.
+
+Opus is suggested for this generator given the architectural judgment involved, but it is not a requirement — it runs on whichever model the invoking session uses.
 
 Usage: `/sdd-generators:c4 [--scope=platform|feature] <source> [output-folder] [--registry=PATH] [--no-images]`
 
