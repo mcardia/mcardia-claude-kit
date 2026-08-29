@@ -1,7 +1,7 @@
 ---
 max_turns: 40
 timeout_seconds: 900
-allowed_tools: [Skill, Write, Read, Glob, Grep]
+allowed_tools: [Skill, Write, Edit, Read, Glob, Grep]
 runs: 3
 ---
 

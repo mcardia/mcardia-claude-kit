@@ -1,7 +1,7 @@
 ---
 type: llm
 focus: {source: file, path: AGENTS.md}
-weight: 2
+weight: 4
 ---
 
 This file states an explicit source-of-truth hierarchy that names ADRs as the top

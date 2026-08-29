@@ -1,7 +1,7 @@
 ---
 max_turns: 45
 timeout_seconds: 1200
-allowed_tools: [Agent, Write, Read, Glob, Grep]
+allowed_tools: [Agent, Write, Edit, Read, Glob, Grep]
 runs: 3
 ---
 

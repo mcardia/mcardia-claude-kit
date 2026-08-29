@@ -1,7 +1,7 @@
 ---
 type: llm
 focus: {source: file, path: specs/csv-import/spec.md}
-weight: 2
+weight: 4
 ---
 
 This spec states WHAT the CSV import does and its acceptance criteria, and leaves

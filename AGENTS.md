@@ -63,11 +63,14 @@ Verify with `/plugin` and `/agents`.
 
 Code and docs live only in this repo; changes reach users by publishing a new version.
 
-1. Make the change in the repo. The **agent files in `plugins/sdd-generators/agents/`
-   are the single source of truth** for subagent behavior; each `SKILL.md` references
-   its agent by name and must not duplicate the agent prompt (no drift).
+1. Make the change in the repo. Where a skill **ships an agent**, the agent file in
+   `plugins/sdd-generators/agents/` is the **single source of truth** for that
+   subagent's behavior: the `SKILL.md` references it by name and must not duplicate
+   the agent prompt (no drift). A skill with no agent carries its own prompt in full —
+   one authority either way, never two.
 2. Branch → commit → push → PR → merge to `main`. Production code goes through the
-   cascade review; documentation does not.
+   independent review before merge defined in the operator's global rules; documentation
+   does not.
 3. Bump the version in **both** files, which must agree:
    - `plugins/sdd-generators/.claude-plugin/plugin.json` → `version`
    - `.claude-plugin/marketplace.json` → the plugin's `version` entry

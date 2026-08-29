@@ -8,8 +8,13 @@ argument.
 claude plugin eval sdd-generators \
   --ablation with-without \
   --allow-tools Bash Write Edit \
+  --judge-model sonnet \
   --max-cost-usd 15
 ```
+
+`--judge-model` matters: every scored `llm` grader carries the discipline signal,
+and the default judge is haiku. Judge at sonnet tier or above, or the rubrics get
+graded more coarsely than they were written.
 
 `--ablation with-without` runs each case twice — once with the plugin, once
 without — and reports the score delta. That delta is the plugin's value: if a
@@ -23,8 +28,15 @@ WHAT separated from HOW, a naming registry the diagrams actually use, an unowned
 requirement raised rather than absorbed, a planted contradiction caught with
 file evidence.
 
+So that the delta is not diluted, the discipline grader in each case outweighs the
+existence graders around it — existence is largely something the no-plugin arm also
+achieves, and a case scored mostly on it reports a delta near zero no matter how much
+the plugin actually added.
+
 The `tool_used: Skill` graders carry no `arm:`, so under ablation they are a
-plugin-fired indicator rather than part of the score.
+plugin-fired indicator rather than part of the score. The `tool_used: Agent` graders
+match on `subagent_type`, never on the agent's name appearing in the prompt text —
+otherwise the no-plugin arm passes them by relaying the word.
 
 Two notes for anyone editing these cases:
 

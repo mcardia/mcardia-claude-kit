@@ -1,6 +1,7 @@
 ---
 type: tool_used
 tool: Agent
-min: 3
+input_match: '"subagent_type"\s*:\s*"[^"]*docs-auditor"'
+min: 4
 arm: both
 ---

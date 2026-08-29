@@ -24,7 +24,7 @@ The ADR does **not** own and must **not** restate:
 - **Product intent** (problem, goals, scope) — owned by the PRD. The ADR may cite it as context.
 - **Per-feature technical design and tasks** — owned by the spec/plan.
 - **Schema, columns, wire-shapes** — owned by reference docs and contracts. The ADR decides the *approach*; the reference defines the *details*.
-- **The full comparative investigation** — owned by the deep-research document (generator `06`). The ADR cites it; it does not paste it.
+- **The full comparative investigation** — owned by the research the ADR cites (produce it with the built-in `deep-research` skill). The ADR cites it; it does not paste it.
 
 One decision per ADR. If two decisions surface, write two ADRs.
 
@@ -58,7 +58,7 @@ You must capture:
 - **Considered options**: at least two real options. Where useful, evaluate each under three lenses: **Most Native** (closest to the platform/stdlib), **Most Used** (largest community/ecosystem), **Future-Proof** (least likely to box you in). Record pros and cons for each.
 - **Decision**: the single chosen option, stated plainly.
 - **Consequences**: positive outcomes, negative outcomes and accepted trade-offs, and any follow-ups (including a migration/exit path if relevant).
-- **Links**: the deep-research document that backs the comparison (if any), related ADRs, and the standards or reference docs that must be synced.
+- **Links**: the research that backs the comparison (if any), related ADRs, and the standards or reference docs that must be synced.
 - **Status**: Proposed, Accepted, or Superseded by another ADR.
 
 ## Interview Process
@@ -205,7 +205,7 @@ status: [Proposed|Accepted|Superseded by ADR-XXX]
 
 ## Links
 
-- **Research:** [deep-research document that backs the comparison, if any]
+- **Research:** [research that backs the comparison, if any]
 - **Related ADRs:** [ADR-XXX]
 - **Docs to sync:** [standards / reference docs that must follow this decision]
 ```

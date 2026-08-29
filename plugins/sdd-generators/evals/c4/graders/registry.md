@@ -1,7 +1,7 @@
 ---
 type: llm
 focus: {source: file, path: architecture/diagrams/naming-registry.md}
-weight: 2
+weight: 4
 ---
 
 This is a naming registry: a table whose rows each give an alias, a display label,

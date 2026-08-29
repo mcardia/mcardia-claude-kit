@@ -1,2 +1,5 @@
 # Temporary read-only reference clone (upstream marketplace we studied)
 tmp-cloud-mkt-place/
+
+# Eval runner output (traces, reports, aggregate-result.json)
+plugins/sdd-generators/evals/results/

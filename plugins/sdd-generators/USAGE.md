@@ -48,10 +48,26 @@ frontmatter, and paste the body into any AI tool.
 The plugin registers one subagent: **`docs-auditor`** — the single-lens, context-isolated
 corpus auditor that `/sdd-generators:readiness-audit` spawns N ≥ 4 times in parallel, and
 again as the fresh-eyes re-verifier. It is the authority on what each lens means. It pins
-its model and reasoning effort in its definition, so audit spawns do not silently inherit
-a lower session effort.
+its model and effort in its definition, so an audit spawn runs at the pinned setting
+rather than inheriting whatever the calling session happens to use.
 
 ## What this plugin deliberately does not do
 
-See the same section in the [repository README](../../README.md#what-sdd-generators-deliberately-does-not-do)
-— every job listed there is left to a Claude Code built-in on purpose.
+Every component costs context tokens in **every** session, whether or not it fires, so a
+component only survives here when Claude Code ships nothing that does its job. These jobs
+were removed on purpose — use the built-in instead:
+
+- **Review a diff before it merges** → `/code-review` (`low`…`max`), or `/code-review ultra`
+  for a multi-agent cloud review of a branch or PR. **Security review** → `/security-review`.
+- **Validate a review's findings against the design corpus** (ADRs, standards, specs) → no
+  built-in does this. It is project policy, so it belongs in the consuming project's own
+  `.claude/agents/`, not in a cross-project plugin.
+- **Execute tasks as orchestrated multi-agent work** → the Workflow tool (phases,
+  `pipeline()`, `parallel()`, resume) and the Agent tool for a single task.
+- **Author Mermaid behavior diagrams** → Claude writes Mermaid from a spec unaided;
+  Artifacts render it natively, and the built-in `artifact-diagramming` skill covers when a
+  diagram earns its place.
+- **Scope and run deep research** → the built-in `deep-research` skill.
+
+TDD rules, review conventions and model assignments are *project* policy: they belong in
+the `AGENTS.md` / `methodology.md` that `/sdd-generators:constitution` writes, not here.
