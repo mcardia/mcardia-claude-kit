@@ -35,9 +35,8 @@ claude plugin install dependency-auditor@mcardia-claude-kit
 ```
 
 Installing once makes the commands (`/sdd-generators:*`, `/dependency-auditor:*`)
-available across **all** your projects. The plugin bundles both the skills and their
-registered agents (`c4-diagram-generator`, `mermaid-diagram-generator`, …); no separate
-agent install is needed.
+available across **all** your projects. The plugin bundles both the skills and its
+registered agent (`docs-auditor`); no separate agent install is needed.
 
 ## Update (end user)
 

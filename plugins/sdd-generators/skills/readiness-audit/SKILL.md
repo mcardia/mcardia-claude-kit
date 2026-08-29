@@ -34,13 +34,7 @@ If `docs/standards/VERIFICATION.md` (or the project's equivalent) does not exist
 
 ### 2. Audit
 
-Spawn **N ≥ 4 independent `docs-auditor` agents in parallel**, one per lens:
-
-- **consistency** — cross-document contradictions: names vs the canonical authority, execution order, ownership, cross-references, decision attributions.
-- **completeness** — unowned mandates: every PRD requirement traced, every ADR-delegated detail landing in a spec, every cited artifact created by some task, every criterion verifiable or explicitly re-scoped.
-- **harness** — the mechanical/inferential boundary: decisions the corpus leaves to agent judgment that a script, lint, or gate could verify deterministically instead; guides or sensors missing that an agent would need to stay aligned with architecture and maintenance expectations.
-- **over-engineering** — a capability that multiplies cases for a benefit nobody has claimed, taxing every other mechanism that must now handle the extra case. Ask *should this exist at all*, not *is this correct* — consistency already covers correctness and will bless an elaborate mechanism that never should have existed. Prime suspects: tiers, modes, strategies, pluggable choices, single-value config knobs, single-implementation abstraction layers, unreachable enum members, "future X" dimensions, unresolved ADR either/ors. Judges designed complexity, never build state — an unbuilt artifact is not a finding on its own.
-- Additional lenses when the surface warrants (security, terminology, test-coverage).
+Spawn **N ≥ 4 independent `docs-auditor` agents in parallel**, one per lens: **consistency**, **completeness**, **harness**, **over-engineering**, plus any additional lens the surface warrants (security, terminology, test-coverage). The `docs-auditor` agent definition is the single authority on what each lens means — name the lens in the brief, do not restate it here.
 
 Each brief names the lens, the scope, and the corpus root — nothing of the session's own beliefs. Each lens's findings are self-contained, with no assumptions about another lens's results, and no lens invades another's scope. The orchestrating session reads no agent's output until the full batch returns, so step 3's cross-verification isn't anchored by whichever brief lands first.
 

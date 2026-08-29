@@ -20,10 +20,7 @@ roughly in this order.
 | `/sdd-generators:prd` | a PRD | problem, goals + metrics, scope, behavior, non-functional targets |
 | `/sdd-generators:adr` | one `adr-NNN.md` | a single architecture decision: context, options, decision, trade-offs |
 | `/sdd-generators:spec` | `specs/<feature>/{spec,plan,tasks}.md` | per-feature WHAT → HOW → tasks |
-| `/sdd-generators:research-briefing` | a research briefing | scopes an investigation that feeds candidate ADRs |
-| `/sdd-generators:research-document` | a deep-research document | the evidence (not authority) that ADRs cite |
-| `/sdd-generators:c4` | C4 PlantUML diagrams | architecture diagrams from a spec |
-| `/sdd-generators:mermaid` | Mermaid diagrams | high-value diagrams from a spec |
+| `/sdd-generators:c4` | C4 PlantUML diagrams | canonical C1+C2 and the naming registry at platform scope; C3 per feature |
 | `/sdd-generators:traceability` | `docs/traceability.md` | requirement/criterion/target → owning spec/task; cross-feature criteria registry |
 | `/sdd-generators:doclint` | `scripts/check-docs.sh` | project-tailored docs lint: dead references, stale markers, name drift, coverage, diagram integrity |
 | `/sdd-generators:readiness-audit` | audit verdict + fix plan | multi-lens agent audit → cross-verified fix plan → fresh-eyes re-verification that declares READY |
@@ -46,13 +43,15 @@ document(s) in the standard format — and, on request, a JSON twin with English
 Each generator is also a plain prompt: open its `skills/<name>/SKILL.md`, skip the YAML
 frontmatter, and paste the body into any AI tool.
 
-## Registered agents
+## Registered agent
 
-The plugin registers six subagents usable directly (or by the skills that orchestrate
-them): `c4-diagram-generator` and `mermaid-diagram-generator` (diagram authoring),
-`docs-auditor` (lens-based corpus audits for `/sdd-generators:readiness-audit`),
-`cascade-reviewer` and `cascade-validator` (stages 1 and 2 of the cascade code review;
-the coordinating session is stage 3), and `sdd-executor` (one `tasks.md` task per spawn,
-strict TDD, honoring the project's model-assignment standard). Each pins its model and
-reasoning effort in its definition, so spawns do not silently inherit a lower session
-effort.
+The plugin registers one subagent: **`docs-auditor`** — the single-lens, context-isolated
+corpus auditor that `/sdd-generators:readiness-audit` spawns N ≥ 4 times in parallel, and
+again as the fresh-eyes re-verifier. It is the authority on what each lens means. It pins
+its model and reasoning effort in its definition, so audit spawns do not silently inherit
+a lower session effort.
+
+## What this plugin deliberately does not do
+
+See the same section in the [repository README](../../README.md#what-sdd-generators-deliberately-does-not-do)
+— every job listed there is left to a Claude Code built-in on purpose.

@@ -36,14 +36,41 @@ roughly in this order. See [plugins/sdd-generators/USAGE.md](plugins/sdd-generat
 | `/sdd-generators:prd` | a PRD | problem, goals + metrics, scope, behavior, non-functional targets |
 | `/sdd-generators:adr` | one `adr-NNN.md` | a single architecture decision: context, options, decision, trade-offs |
 | `/sdd-generators:spec` | `specs/<feature>/{spec,plan,tasks}.md` | per-feature WHAT → HOW → tasks |
-| `/sdd-generators:research-briefing` | a research briefing | scopes an investigation that feeds candidate ADRs |
-| `/sdd-generators:research-document` | a deep-research document | the evidence (not authority) that ADRs cite |
-| `/sdd-generators:c4` | C4 PlantUML diagrams | architecture diagrams from a spec |
-| `/sdd-generators:mermaid` | Mermaid diagrams | high-value diagrams from a spec |
+| `/sdd-generators:c4` | C4 PlantUML diagrams | canonical C1+C2 and the naming registry at platform scope; C3 per feature |
+| `/sdd-generators:traceability` | `docs/traceability.md` | requirement/criterion/target → owning spec/task |
+| `/sdd-generators:doclint` | `scripts/check-docs.sh` | project-tailored docs lint: dead references, stale markers, name drift, coverage |
+| `/sdd-generators:readiness-audit` | audit verdict + fix plan | multi-lens agent audit → cross-verified fix plan → fresh-eyes re-verification |
 
 Authority flows top-down: **ADRs > standards > reference docs > running system**. Specs
 derive from ADRs and never override them. Deep-research is evidence that feeds
 decisions; it is never an authority.
+
+### What `sdd-generators` deliberately does not do
+
+Every component costs context tokens in **every** session, whether or not it fires. So a
+component only survives here when Claude Code ships nothing that does its job. These jobs
+were removed from the plugin because a built-in already does them — use the built-in:
+
+| Job | Use this built-in instead | Removed from the plugin |
+|---|---|---|
+| Review a diff before it merges | `/code-review` (`low`…`max`), `/code-review ultra` for a multi-agent cloud review of a branch or PR | `cascade-reviewer` |
+| Validate a review's findings (which are real, which are over-flagged, what was missed) | `/code-review`'s own verify pass — it reports each finding as `CONFIRMED` or `PLAUSIBLE` | `cascade-validator` |
+| Security review of pending changes | `/security-review` | — |
+| Execute tasks as orchestrated multi-agent work | the **Workflow** tool (phases, `pipeline()`, `parallel()`, resume that reuses unchanged agent calls) and the **Agent** tool for a single task | `sdd-executor` |
+| Author Mermaid behavior diagrams (sequence, state, flowchart, class, ER) | Claude writes Mermaid from a spec unaided; Artifacts render ` ```mermaid ` fences natively, and the built-in `artifact-diagramming` skill covers when a diagram earns its place | `mermaid`, `mermaid-diagram-generator` |
+| Scope and run deep research | the built-in `deep-research` skill — it asks its own clarifying questions, fans out searches, adversarially verifies claims, and synthesizes a cited report | `research-briefing`, `research-document` |
+
+Two further reductions were internal rather than delegated to a built-in: the
+`c4-diagram-generator` agent was folded into the `/sdd-generators:c4` skill, and the lens
+definitions duplicated in `readiness-audit` now live only in the `docs-auditor` agent —
+one authority per fact, applied to the plugin itself.
+
+What remains is the part no built-in covers: the **SDD corpus discipline** — a
+constitution that fixes the source-of-truth hierarchy, the document generators that obey
+it, a traceability matrix, a generated docs lint, and a multi-lens adversarial readiness
+audit. TDD rules, review conventions and model assignments are *project* policy: they
+belong in the `AGENTS.md` / `methodology.md` that `/sdd-generators:constitution` writes,
+not in a cross-project plugin.
 
 ### dependency-auditor
 
