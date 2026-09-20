@@ -22,7 +22,7 @@ Reach for this **before** writing a decision anywhere — not after, and not onl
 
 - A finding, defect, audit result or review comment that looks like the operator's to rule on.
 - A blocker, a deferral, or anything about to be described as parked, registered, awaiting a word, or not-work-yet. Those are dispositions; a disposition needs a grade behind it.
-- An explicit ask — "show this as an operator decision", "present it as an OD". **The ask names the form, never the routing.** If the gate grades it at `moderate` or below with no operator-only category, the answer to that ask is the executed change plus the record as its receipt.
+- An explicit ask — "show this as an operator decision", "present it as an OD". **The ask names the form, never the routing.** Where the constitution's own line leaves the change with the session, the answer to that ask is the executed change plus the record as its receipt.
 - A turn about to end by handing something over.
 
 It does **not** fire for a routine call the session owns — ceremony tier, ordering, placement, naming. Those are decided in one line and the work continues.
@@ -33,7 +33,7 @@ It does **not** fire for a routine call the session owns — ceremony tier, orde
 
 Find the constitution — `AGENTS.md`, `docs/AGENTS.md`, or the methodology document — and read its operator-decision section **in full, now, before reasoning about the case**. Re-deriving it from memory each turn is how a session ends up flipping its own answer between turns.
 
-If the project has no such section, this skill has nothing to apply. Author it first — `/sdd-generators:constitution` owns that document — and say plainly that it did not exist. The hooks are inert until it does, by design.
+If the project has no such section, this skill has nothing to apply. Author it first — `/sdd-generators:constitution` owns that document — and say plainly that it did not exist. The hooks refuse nothing until it does, by design.
 
 What the section must fix, for the rest of this cycle to mean anything: what counts as an operator decision; the gate; the grade words and the line above which the operator decides; the categories that are the operator's at every grade; the record's fields; and where a record lands.
 
@@ -57,36 +57,30 @@ Its output is evidence, not a verdict. Where the critic and a record disagree, s
 
 ### 3. Grade, then route
 
-Grade the change **whole** — what it costs to make and how far it reaches — with the constitution's one word.
+Grade the change in the constitution's own word, weighing it the way that section says to weigh it. Then route by what the section says — it draws a line, and it names the categories that are the operator's whatever the grade. Read both there, in the text, this turn. Two outcomes, and only two:
 
-- **At `moderate` or below, with none of the operator-only categories touched: execute it.** Then write the record as the receipt. Presenting it instead is the failure this skill exists to prevent; it costs the operator time he did not owe.
-- **Above that line, or any operator-only category touched: it is the operator's.** Present the record and stop.
+- **The section leaves it with the session** — execute it, then write the record as the receipt. Presenting it instead is the failure this skill exists to prevent; it costs the operator time he did not owe.
+- **The section leaves it with the operator** — present the record and stop.
 
-Assign a category only when you can **quote the corpus sentence** that makes it one, and argue the opposite case before landing. Claiming a category that does not hold blocks work on the operator for nothing; claiming `none` where one holds authorises a session to act where it must not.
-
-There is no third state. "Registered, awaiting his word" is not a disposition — it is an ungrounded grade claim wearing a hedge.
-
-For the security category specifically, the test is **what becomes reachable**, not what some closure clause reaches. A change that adds no reachability is not a security decision merely because it touches security-adjacent code.
+Which of the two holds is the `od-lens` **ownership** lens's question, and that lens is defined in the agent file. Take its answer as evidence and settle it at the constitution yourself.
 
 ### 4. Write the record where the work it governs lands
 
 The record's shape is the same whether it asks or reports — the constitution fixes the fields; do not invent a shorter form for the reporting direction, which is the direction that gets cut.
 
-Where it lands is the constitution's routing sentence, not a preference: a decision that changes something rides the pull request or commit carrying the change; a decision that changes nothing — a KEEP, a deferral, a finding left unscheduled — goes on the tracker thread of the issue it concerns; a decision that changes a spec's phase set goes in that spec's revision log. **The grade decides WHO decides, never WHETHER it is written down.**
+Where it lands is the constitution's routing sentence, read there and applied literally rather than by preference. **The grade decides WHO decides, never WHETHER it is written down.**
 
 ## What the hooks refuse
 
-This plugin ships two hooks. Both are inert in a project whose constitution has no operator-decision section, so they cost nothing where the rule was never adopted.
+This plugin ships two hooks. Both refuse nothing in a project whose constitution has no operator-decision section — though each is still a `python3` process, about 17 ms on every Bash call and every turn end, adopted or not.
 
-- **On a tracker write** (`gh issue|pr create|comment`) that files a defect, claims the operator owns something, or already carries a grade: the write is blocked unless it carries a grade, at least two `file:line` anchors — the cause and the remedy are two places — and names the panel it went through. A grade of `n/a` records a decision taken elsewhere and owes the anchors but not the panel.
-- **At the end of a turn** that hands the operator a decision, or states a grade above the line: the turn does not end without the record. A grade inside a sentence is not the record.
+- **On a tracker write** (`gh issue|pr create|comment|edit|close|review`, and `gh api` with a body) that files a defect, claims the operator owns something, or already carries a grade: the write is blocked unless it carries a grade in the constitution's own words, at least two `file:line` anchors — the cause and the remedy are two places — and names the panel it went through. A grade of `n/a` records a decision taken elsewhere and owes the anchors but not the panel.
+- **At the end of a turn** that hands the operator a decision, or states a grade above the line the constitution draws: the turn does not end without the record. A grade inside a sentence is not the record.
 
 A hook firing is information, not an obstacle: it means the gate was skipped. Satisfy it by running the cycle, never by rewording the text until the pattern stops matching.
 
 ## Rules
 
 - The record is written inline, as the block. Never a popup, never a question widget, never prose that describes a decision without carrying its fields.
-- **A finding is not work.** Reporting a defect never authorises fixing it, and this cycle does not widen into execution: verification verifies. The one exception is step 3's own routing, which is the rule's instruction, not a session's initiative.
-- Incidental defects noticed on the way get one line each under "Incidental, not scheduled". They do not join the change set.
 - Batch related findings into one panel run. Interactions between remedies are a question only the critic can answer, and it can only answer it for records it sees together.
 - Artifacts are English, whatever language the conversation uses.

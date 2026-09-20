@@ -10,11 +10,27 @@ to prevent, so they live here once.
 project the moment the plugin is installed. An operator-decision gate that
 fired everywhere would refuse ordinary work in repositories that never adopted
 the rule, and a gate people switch off is a gate that is off. So these hooks
-are inert unless the project itself declares the rule: they walk up from the
-working directory looking for a constitution that carries an operator-decision
-section. A project adopts the enforcement by having the rule, and by nothing
-else — no flag, no settings entry, no second file to drift.
+refuse nothing unless the project itself declares the rule: they walk up from
+the working directory looking for a constitution that carries an
+operator-decision section. A project adopts the enforcement by having the rule,
+and by nothing else — no flag, no settings entry, no second file to drift.
+
+Refusing nothing is not costing nothing. Each hook is a `python3` process,
+measured at about 17 ms per Bash call and per turn end, in every project.
+
+**The constitution is the authority, so the vocabulary is read out of it.**
+The grade words and the line above which the operator decides are the
+project's, never this file's. `grade_vocabulary()` parses them from the section
+the hooks already open. When the parse fails the hooks degrade to a weaker
+check that is still true — never to some other project's words.
+
+    python3 check-od-record.py --explain [dir]
+
+prints what was resolved for a directory: the constitution, the vocabulary and
+the threshold. That is the only way to see whether a project is gated, and by
+which file.
 """
+import collections
 import os
 import re
 
@@ -28,29 +44,53 @@ CONSTITUTION_NAMES = (
     "docs/standards/methodology.md",
 )
 
-# The section heading that declares the discipline. Tolerant of numbering and
-# of the two spellings the kit's `constitution` generator can emit.
+# The section heading that declares the discipline, and the whole of the opt-in.
+# Tolerant of numbering, of the two spellings the kit's `constitution` generator
+# can emit, and of the few near-synonyms a project is likely to reach for.
+# Deliberately not wider than that: a heading set loose enough to catch every
+# phrasing would switch the gate on in projects that never adopted the rule,
+# which is the failure this predicate exists to avoid. A project whose heading
+# is not here gets no enforcement — run `--explain` to see that it is not gated.
 OD_SECTION = re.compile(
-    r"^#{1,6}\s*(?:\d+[.)]\s*)?(?:operator\s+decisions?|decis(?:õ|o)es\s+do\s+operador)\s*$",
+    r"^#{1,6}\s*(?:\d+[.)]\s*)?(?:"
+    r"operator[- ]decisions?(?:\s+(?:gate|rule))?"
+    r"|decis(?:õ|o)es\s+do\s+operador"
+    r"|decisions?\s+reserved\s+(?:to|for)\s+the\s+(?:operator|owner)"
+    r"|decisions?\s+(?:that\s+are\s+)?the\s+operator'?s"
+    r")\s*$",
     re.IGNORECASE | re.MULTILINE,
 )
 
-# Text that assigns a decision to the operator. Narrow on purpose: these are
-# assertions about WHO DECIDES, which is exactly what a grade answers.
+# Text that ASSIGNS a decision. Every phrase here is PERFORMATIVE: it only
+# gets written when the writer is handing something over. Nothing here is a
+# bare possessive, a policy catchphrase, or a phrase that can merely DESCRIBE
+# an item — that distinction is the whole of the narrowing, and it was measured
+# rather than argued.
+#
+# Measured over 200 real comment bodies from this estate's three tracker
+# repositories: the earlier pattern refused 40 of them — one in five — almost
+# all on `the operator's` alone ("the operator's `db` container", "the
+# operator's local tsc") or on a policy catchphrase quoted inside a findings
+# document. This pattern refuses 0 of the same 200 while still catching every
+# constructed handover in the review's harnesses.
+#
+# Two phrases the review proposed keeping are NOT here, because measurement
+# refuted them: `operator's call` and an indefinite `an/one operator decision`
+# appear in this estate's cascade findings documents as DESCRIPTIONS of an item
+# ("whether this item owns provisioning it is the operator's call"), and keeping
+# either holds the refusal rate at 12 of 200. `the operator decision` — definite
+# article, no hyphen, so "the operator-decision section" is prose about the rule
+# — keeps the canonical handover sentence gated.
 OWNERSHIP_CLAIM = re.compile(
-    r"operator decision|operator'?s (?:call|at any grade|to|own)|the operator'?s\b"
-    r"|awaiting (?:his|the operator'?s) word|aguarda sua palavra"
-    r"|registered,? not work|not work until|a finding is not work"
-    r"|blocked-by-operator|his at any grade|é seu\b|decis(?:ão|ion) (?:é|is) (?:sua|his)",
-    re.IGNORECASE,
-)
-
-# The grade the rule produces, spelled AS a grade rather than used as an
-# adjective — "a minor change" is prose, "grade: minor" is a disposition.
-GRADE_STATED = re.compile(
-    r"\bgrade[^\n]{0,40}?\b(low|minor|moderate|major|critical)\b"
-    r"|\bgrau[^\n]{0,40}?\b(low|minor|moderate|major|critical)\b"
-    r"|\bgrade\s*[:—–-]\s*n/?a\b|\bgrau\s*[:—–-]\s*n/?a\b",
+    r"\bthe operator decision\b"
+    r"|\b(?:this|that|it)(?:'s|\s+(?:is|was|remains|stays))\s+(?:an?|the)\s+"
+    r"operator[- ]decision\b"
+    r"|\bawaiting (?:his|your|the operator'?s) word\b"
+    r"|aguarda(?:m|ndo)? (?:a )?sua palavra"
+    r"|\bblocked-by-operator\b"
+    r"|\byours to (?:decide|call|rule|settle)\b"
+    r"|\bfor you to (?:decide|call|rule|settle)\b"
+    r"|\b(?:é|e) sua decis(?:ão|ao)\b|\bdecis(?:ão|ao) (?:é|e) sua\b",
     re.IGNORECASE,
 )
 
@@ -58,17 +98,179 @@ GRADE_STATED = re.compile(
 # It still owes its anchors — it has to point at where that decision lives —
 # but not the panel, because a panel adjudicates and there is nothing here to
 # adjudicate. Making it visible in the artifact is the whole of its cost.
-GRADE_NA = re.compile(r"\b(?:grade|grau)\s*[:—–-]\s*n/?a\b", re.IGNORECASE)
+#
+# This one stays a constant on purpose: `n/a` is the hook's own spelling for
+# "no grade to give", and carries no word out of anybody's constitution. A
+# function taking a vocabulary it would never read would be a worse lie than
+# the constant.
+GRADE_NA = re.compile(r"\b(?:grade|grau)\s*[:—–=-]\s*n/?a\b", re.IGNORECASE)
 
-# A grade above `moderate` IS the handover, whether or not a sentence says so:
-# the rule puts everything above that line with the operator. A turn stating
-# one owes the record even when it hands over in no other words.
-ABOVE_MODERATE = re.compile(
-    r"(?:\bgrau\b|\bgrade\b)[^\n]{0,60}?\b(major|critical)\b", re.IGNORECASE)
+# The label a grade is written under. This is a recognition vocabulary for
+# FINDING a grade in text, not a rule about what a grade may be called; the
+# WORDS are the constitution's and are parsed from it below.
+_LABEL = r"(?:grade|grau)(?![\w-])"
+
+# A grade is STATED when its label heads a clause and the word follows it
+# closely: `Grade: major`, `| Grau | crítico |`, `**Grade:** minor`. A grade
+# inside a sentence is not a record — which is the rule's own wording — and it
+# is also how a turn that EXPLAINS the rule reads: "then grade the change with
+# one word: `low`, `minor`, …". Without this, the gate blocks the very turn
+# that edits the rule it enforces, and the reviewer reproduced exactly that.
+#
+# `(?<![^\W\d_][ \t])` rejects a label preceded by a word — "the grade of the
+# regression is minor", "que diga grade major" — while leaving a label that
+# starts a line, a bullet, a table cell or a clause after `:`, `—`, `**`.
+_CLAUSE_START = r"(?<![^\W\d_][ \t])"
+_GAP = 24
+
+GradeVocabulary = collections.namedtuple("GradeVocabulary", "words threshold")
+"""`words` in the constitution's own order; `threshold` indexes the word the
+section draws the line at, or is None when the section states no line."""
+
+# The sentence that introduces the grade is the one that uses the verb.
+_GRADE_VERB = re.compile(r"\bgrad(?:e[sd]?|ing)\b|\bgrau\b|\bgradua", re.IGNORECASE)
+_SENTENCE = re.compile(r"(?<=[.!?])\s+")
+_BACKTICKED = re.compile(r"`([^`\n]{1,32})`")
+_ONE_WORD = re.compile(r"^[^\W\d_][\w-]*$", re.UNICODE)
+_MAX_WORDS = 12
+
+
+def section_text(text):
+    """The body of the operator-decision section, or None."""
+    match = OD_SECTION.search(text)
+    if not match:
+        return None
+    level = len(re.match(r"\s*(#+)", match.group(0)).group(1))
+    rest = text[match.end():]
+    following = re.compile(r"^#{1,%d}\s+\S" % level, re.MULTILINE).search(rest)
+    return rest[:following.start()] if following else rest
+
+
+def grade_vocabulary(text):
+    """The project's grade words and threshold, read out of its constitution.
+
+    The vocabulary is the ordered backticked one-word tokens of the sentence
+    that introduces the grade — "grade the change with one word: `low`,
+    `minor`, `moderate`, `major`, `critical`". The threshold is the word the
+    section puts the line at — "At `moderate` or below …", "Above `moderate`".
+
+    Returns None when the section states no vocabulary. Callers must then fall
+    back to a weaker check that is still true, never to another project's
+    words: the whole defect this function exists to remove was the five words
+    of one estate's constitution shipped as if they were everybody's.
+    """
+    body = section_text(text)
+    if not body:
+        return None
+    for sentence in _SENTENCE.split(body):
+        if not _GRADE_VERB.search(sentence):
+            continue
+        words, seen = [], set()
+        for token in _BACKTICKED.findall(sentence):
+            token = token.strip().lower()
+            if _ONE_WORD.match(token) and token not in seen:
+                seen.add(token)
+                words.append(token)
+        if 2 <= len(words) <= _MAX_WORDS:
+            return GradeVocabulary(tuple(words), _threshold_index(body, words))
+    return None
+
+
+def _threshold_index(body, words):
+    """Which word the section draws the line at, or None if it draws none."""
+    alternation = "|".join(re.escape(word) for word in words)
+    for pattern in (
+        r"\bat\s+`?(%s)`?\s+or\s+below" % alternation,
+        r"`?(%s)`?\s+or\s+below" % alternation,
+        r"\babove\s+`?(%s)`?" % alternation,
+        r"\bacima\s+de\s+`?(%s)`?" % alternation,
+        r"`?(%s)`?\s+ou\s+(?:abaixo|menos)" % alternation,
+    ):
+        found = re.search(pattern, body, re.IGNORECASE)
+        if found:
+            return words.index(found.group(1).lower())
+    return None
+
+
+def grade_stated(vocabulary):
+    """A pattern matching a grade written as a grade.
+
+    With a vocabulary, the word must be one of the project's. Without one, the
+    check degrades to "a grade label carries some value" — weaker, and true.
+    Guessing this estate's words in somebody else's project is the defect.
+    """
+    if vocabulary is None:
+        return re.compile(
+            r"%s%s\s*[:—–=-]\s*[^\W\d_][\w/-]*" % (_CLAUSE_START, _LABEL),
+            re.IGNORECASE)
+    alternation = "|".join(re.escape(word) for word in vocabulary.words)
+    return re.compile(
+        r"%s%s[^\n]{0,%d}?\b(?:%s)\b|%s"
+        % (_CLAUSE_START, _LABEL, _GAP, alternation, GRADE_NA.pattern),
+        re.IGNORECASE)
+
+
+def stated_grades(text, vocabulary):
+    """Every grade word this text states, in order of appearance.
+
+    The word taken is the nearest one after the label, so "Grade: minor, and
+    the critical path is unchanged" states `minor` and not `critical`.
+    """
+    if vocabulary is None:
+        return []
+    alternation = "|".join(re.escape(word) for word in vocabulary.words)
+    pattern = re.compile(
+        r"%s%s[^\n]{0,%d}?\b(%s)\b" % (_CLAUSE_START, _LABEL, _GAP, alternation),
+        re.IGNORECASE)
+    return [match.group(1).lower() for match in pattern.finditer(text)]
+
+
+def above_threshold(text, vocabulary):
+    """True when the text states a grade the constitution puts above the line.
+
+    Skipped entirely — always False — when the vocabulary or the threshold
+    could not be read. A guessed threshold would be this estate's rule wearing
+    another project's name.
+    """
+    if vocabulary is None or vocabulary.threshold is None:
+        return False
+    above = set(vocabulary.words[vocabulary.threshold + 1:])
+    return any(word in above for word in stated_grades(text, vocabulary))
+
 
 # `path/to/file.ext:123` — where the cause and the remedy were verified.
-ANCHOR = re.compile(r"[\w./-]+\.[A-Za-z0-9]{1,6}:\d+")
+# A host and a port have the same shape (`example.com:8080`), so an anchor
+# counts only when it carries a directory or a source-file extension. Every
+# real "where verified" anchor carries a path; the extension list is what keeps
+# a bare `login.go:844` working, and is lexical rather than policy.
+_ANCHOR = re.compile(
+    r"(?<![\w:/-])([\w./-]*[\w-])\.([A-Za-z][A-Za-z0-9]{0,5}):(\d{1,7})(?!\w)")
+SOURCE_EXTENSIONS = frozenset("""
+    c cc cpp cxx h hpp cs java kt kts scala swift m mm rs go rb php pl pm py pyi
+    js mjs cjs jsx ts tsx vue svelte sql graphql proto thrift
+    sh bash zsh fish ps1 bat
+    md mdx rst txt adoc org tex
+    json yaml yml toml ini cfg conf properties env lock mod sum
+    html htm css scss sass less xml xsd xsl svg
+    tf tfvars hcl gradle bzl cmake mk make dockerfile puml plantuml mermaid
+    ipynb r jl lua dart ex exs erl hs ml clj cljs groovy vb f90 asm s
+""".split())
 MIN_ANCHORS = 2
+# Two DISTINCT anchor strings, which two lines of one file satisfy. Kept that
+# way on purpose: a cause and its remedy are very often one function and its
+# caller in the same file, and requiring two files would make that record
+# impossible to write truthfully. "Two places" is two places, not two files.
+
+
+def anchors(text):
+    """The distinct source anchors in the text."""
+    found = set()
+    for match in _ANCHOR.finditer(text):
+        path, extension = match.group(1), match.group(2).lower()
+        if "/" in path or extension in SOURCE_EXTENSIONS:
+            found.add(match.group(0))
+    return found
+
 
 # The adversarial panel. A magic string only proves the sentence was written,
 # not that the panel ran — which is why the panel ships as a saved workflow
@@ -88,11 +290,29 @@ PANEL = re.compile(
 )
 
 
+def _home():
+    """The real path of `$HOME`, or None when it is unset or unusable."""
+    home = os.environ.get("HOME") or ""
+    if not home:
+        return None
+    try:
+        return os.path.realpath(home)
+    except OSError:
+        return None
+
+
 def find_constitution(cwd):
     """The nearest enclosing project whose constitution declares the rule.
 
     Returns `(project_root, constitution_path)`, or `None` when no ancestor
     directory carries one — in which case the caller must do nothing at all.
+
+    The walk stops BELOW `$HOME`: a `CLAUDE.md` or `AGENTS.md` in the home
+    directory is a person's standing instructions, not a project's
+    constitution, and letting one switch the gate on would gate every project
+    on the machine including those that never adopted the rule. When `$HOME`
+    is unset, or the working directory is outside it, the walk runs to `/` as
+    before — refusing to look at all would be a silent no-op.
     """
     if not cwd:
         return None
@@ -102,7 +322,13 @@ def find_constitution(cwd):
         return None
     if not os.path.isdir(current):
         return None
+    home = _home()
+    if home is not None and not (current == home
+                                 or current.startswith(home + os.sep)):
+        home = None  # outside it: `$HOME` bounds nothing here
     while True:
+        if current == home:
+            return None
         for name in CONSTITUTION_NAMES:
             candidate = os.path.join(current, name)
             try:
@@ -174,3 +400,47 @@ def remote_slugs(project_root):
         if match:
             slugs.add(f"{match.group(1)}/{match.group(2)}".lower())
     return slugs
+
+
+def read_vocabulary(constitution):
+    """The grade vocabulary of a constitution path, or None."""
+    try:
+        with open(constitution, encoding="utf-8", errors="ignore") as handle:
+            return grade_vocabulary(handle.read())
+    except OSError:
+        return None
+
+
+def explain(cwd):
+    """One paragraph saying whether a directory is gated, and by what.
+
+    There is otherwise no way to ask the question, and a project whose heading
+    `OD_SECTION` does not recognise looks identical to one that is gated and
+    quiet. This also shows what the vocabulary parser actually read.
+    """
+    found = find_constitution(cwd)
+    if not found:
+        return (f"operator-decision gate: INERT for {cwd}\n"
+                f"  no ancestor directory (below $HOME) carries a constitution "
+                f"with an operator-decision section.\n"
+                f"  looked for: {', '.join(CONSTITUTION_NAMES)}")
+    project_root, constitution = found
+    vocabulary = read_vocabulary(constitution)
+    lines = [f"operator-decision gate: ACTIVE for {cwd}",
+             f"  project root:  {project_root}",
+             f"  constitution:  {constitution}"]
+    if vocabulary is None:
+        lines.append("  vocabulary:    NOT PARSED — the section states no grade "
+                     "words. A grade label with any value satisfies the check, "
+                     "and the above-threshold rule is skipped entirely.")
+    else:
+        lines.append(f"  vocabulary:    {', '.join(vocabulary.words)}")
+        if vocabulary.threshold is None:
+            lines.append("  threshold:     NOT PARSED — the section draws no "
+                         "line. The above-threshold rule is skipped entirely.")
+        else:
+            at = vocabulary.words[vocabulary.threshold]
+            above = vocabulary.words[vocabulary.threshold + 1:]
+            lines.append(f"  threshold:     {at} "
+                         f"(above it: {', '.join(above) or 'nothing'})")
+    return "\n".join(lines)

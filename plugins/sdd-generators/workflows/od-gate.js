@@ -61,9 +61,10 @@ const ROOTS = [
 ].filter(Boolean).join('\n')
 
 /*
- * The record's fields. This schema is the machine-checked authority for them:
- * a prose copy elsewhere would drift, and the rule's own wording in the
- * project constitution is what these implement.
+ * The shape the synthesiser returns. The project constitution is the authority
+ * on what an operator-decision record contains; this is the transport, and
+ * where the two differ the constitution wins and the synthesiser says so in
+ * its own text.
  */
 const RECORD = {
   type: 'object',
@@ -77,7 +78,7 @@ const RECORD = {
     recommendation_verb: { type: 'string', enum: ['KEEP', 'CHANGE'] },
     recommendation: { type: 'string', description: 'Field 4 — if CHANGE, exactly what changes: files, functions, contract rows. Executable as written by a fresh agent.' },
     cheapest_tier: { type: 'string', description: 'All four tiers enumerated, and which one the remedy sits at.' },
-    grade: { type: 'string', enum: ['low', 'minor', 'moderate', 'major', 'critical'] },
+    grade: { type: 'string', description: 'One word, taken from the grade vocabulary the project constitution states in its operator-decision section. Use that section\'s words exactly; do not substitute a scale from anywhere else.' },
     operator_axis: { type: 'string', description: 'The operator-only category this touches, named as the constitution names it, or `none`.' },
     operator_axis_quote: { type: 'string', description: 'If a category is claimed, the corpus sentence that makes it one, quoted with file and line, plus the strongest argument against. If none, name the live candidate and why it fails.' },
     where_verified: { type: 'string', description: 'Field 6 — file:line anchors and commands, for BOTH cause and remedy.' },
@@ -92,11 +93,23 @@ const RECORD = {
 }
 
 function describe(item) {
-  if (typeof item === 'object' && item.brief) {
+  const object = typeof item === 'object' && item !== null
+  if (object && item.brief) {
     return { key: item.key || item.title || 'finding', source: item.brief }
   }
-  const number = String(typeof item === 'object' ? item.issue || item.key : item)
-  const repo = (typeof item === 'object' && item.repo) || input.repo
+  /*
+   * Without a `brief`, the item must resolve to an issue number. `{ title:
+   * 'x' }` used to reach the agent as `#undefined` with an instruction to run
+   * `gh issue view undefined`, which fails four agents in silence.
+   */
+  const number = String((object ? item.issue ?? item.key : item) ?? '').trim().replace(/^#/, '')
+  if (!/^\d+$/.test(number)) {
+    throw new Error(
+      'od-gate: each item is an issue number, or { key, title, brief } with the '
+      + 'finding stated in full under `brief`. This one is neither: '
+      + JSON.stringify(item))
+  }
+  const repo = (object && item.repo) || input.repo
   const scope = repo ? ` --repo ${repo}` : ''
   return {
     key: repo ? `${repo}#${number}` : `#${number}`,
@@ -127,7 +140,11 @@ const records = (await pipeline(
     `${ROOTS}\n\n# Task — write the record for ${prev.item.key}\n\n${prev.item.source}\n\n`
     + `Your lens is **synthesis**. Three independent lens agents examined this `
     + `finding — the cause, the remedy and the ownership axes. Their reports follow.\n\n`
-    + `Emit the record through the structured output attached to this call.`
+    + `Emit the record through the structured output attached to this call. The `
+    + `\`grade\` field takes ONE word, and the words are the project `
+    + `constitution's: read its operator-decision section and use the scale it `
+    + `states. The schema does not constrain them, and no other scale is `
+    + `admissible — least of all one you remember from another project.`
     + prev.reports.map((r, i) => `\n\n===== LENS REPORT ${i + 1} =====\n${r}`).join(''),
     { label: `synthesis:${prev.item.key}`, phase: 'Synthesis', agentType: AGENT, schema: RECORD },
   ),
