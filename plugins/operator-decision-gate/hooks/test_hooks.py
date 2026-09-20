@@ -321,9 +321,22 @@ CASES_RECORD = [
     ("ALLOWED (compliant): a comment quoting the grade vocabulary", CONSTITUTION,
      "gh issue comment 12 --body 'The section says to grade the change with one "
      "word: `low`, `minor`, `moderate`, `major`, `critical`. Nothing is decided here.'", 0),
-    ("ALLOWED (compliant): a grade word used as prose", CONSTITUTION,
+    # This case was pinned ALLOWED and is now a refusal, deliberately. A
+    # copula puts the grade word on the label, so a sentence about a
+    # regression reads as a stated grade, enters the gate and fails on the
+    # anchors. That is the price of recognising "the grade here is major",
+    # which stated a grade to every reader and to neither hook; the case is
+    # kept, flipped, rather than deleted, so the price stays visible.
+    ("blocks prose a copula reads as a stated grade — the accepted cost",
+     CONSTITUTION,
      "gh issue comment 12 --body 'We upgraded CI. The grade of the regression "
-     "is minor at worst.'", 0),
+     "is minor at worst.'", 2),
+    ("blocks a grade stated through a copula (EN)", CONSTITUTION,
+     "gh issue comment 12 --body 'The grade here is major, and it stays "
+     "registered on this thread.'", 2),
+    ("blocks a grade stated through a copula (pt-BR)", CONSTITUTION,
+     "gh issue comment 12 --body 'O grade deste caso é major; segue "
+     "registrado.'", 2),
     ("ALLOWED (compliant): the operator's machine is not a decision", CONSTITUTION,
      "gh issue comment 12 --body \"Repro only on the operator's laptop, not in CI.\"", 0),
     ("ALLOWED (compliant): plain english 'does not work until'", CONSTITUTION,
@@ -343,6 +356,10 @@ CASES_FORM = [
      "That one is yours to decide — I have left it registered.", False, 2),
     ("blocks a grade above the line with no record", CONSTITUTION,
      "Corrigi o resto. O último fica: grade major, o handler do SPA shell.", False, 2),
+    # The same grade, stated through a copula rather than a label heading a
+    # clause. It is above the line either way, and the turn used to end.
+    ("blocks a copula grade above the line with no record", CONSTITUTION,
+     "Fechei a fase. O grade deste caso é major, e segue registrado.", False, 2),
     ("blocks a record missing the panel", CONSTITUTION,
      FULL_RECORD.replace(" — od-gate panel.", ".").replace("Grade: minor", "Grade: major"),
      False, 2),
@@ -382,19 +399,26 @@ CASES_FORM = [
 GIT_CONFIG = """[core]
 \trepositoryformatversion = 0
 [remote "origin"]
-\turl = git@github.com:acme/core.git
+\turl = git@github.com:{slug}.git
 \tfetch = +refs/heads/*:refs/remotes/origin/*
 """
 
 
-def make_project(body, worktree=False, parent=None):
+def make_project(body, worktree=False, parent=None, remote="acme/core",
+                 name=None):
     """A temp project: a constitution plus a real git config with a remote.
 
     `worktree` builds the linked-worktree shape, where `.git` is a FILE and the
-    config lives in the common directory rather than beside it.
+    config lives in the common directory rather than beside it. `remote` is the
+    slug that config points at, which is what scope is decided against.
     """
-    root = (tempfile.mkdtemp(prefix="od-hook-test-") if parent is None
-            else tempfile.mkdtemp(prefix="p-", dir=parent))
+    config = GIT_CONFIG.format(slug=remote)
+    if name is not None:
+        root = os.path.join(parent, name)
+        os.makedirs(root)
+    else:
+        root = (tempfile.mkdtemp(prefix="od-hook-test-") if parent is None
+                else tempfile.mkdtemp(prefix="p-", dir=parent))
     if body is not None:
         with open(os.path.join(root, "AGENTS.md"), "w", encoding="utf-8") as fh:
             fh.write(body)
@@ -403,7 +427,7 @@ def make_project(body, worktree=False, parent=None):
         gitdir = os.path.join(common, "worktrees", "wt")
         os.makedirs(gitdir)
         with open(os.path.join(common, "config"), "w", encoding="utf-8") as fh:
-            fh.write(GIT_CONFIG)
+            fh.write(config)
         with open(os.path.join(gitdir, "commondir"), "w", encoding="utf-8") as fh:
             fh.write("../..\n")
         with open(os.path.join(root, ".git"), "w", encoding="utf-8") as fh:
@@ -411,7 +435,7 @@ def make_project(body, worktree=False, parent=None):
     else:
         os.makedirs(os.path.join(root, ".git"))
         with open(os.path.join(root, ".git", "config"), "w", encoding="utf-8") as fh:
-            fh.write(GIT_CONFIG)
+            fh.write(config)
     return root
 
 
@@ -497,12 +521,16 @@ def payload_cases(suite):
     code, _ = run(RECORD_HOOK, None, raw="{not json at all")
     suite.check("record/ALLOWED (inert): malformed stdin", code, 0)
 
+    # Inert because nothing ABOVE this path carries a constitution — not
+    # because the path is missing. A missing cwd whose ancestors do carry one
+    # still gates; `deleted_cwd_case` is that half.
     code, _ = run(RECORD_HOOK, {
         "tool_name": "Bash",
         "tool_input": {"command": f"gh issue comment 12 --body '{CLAIM}'"},
         "cwd": "/nonexistent/path/that/is/not/there",
     })
-    suite.check("record/ALLOWED (inert): a cwd that does not exist", code, 0)
+    suite.check("record/ALLOWED (inert): a cwd under no constitution at all",
+                code, 0)
 
     code, _ = run(FORM_HOOK, None, raw="")
     suite.check("form/ALLOWED (inert): empty stdin", code, 0)
@@ -526,6 +554,60 @@ def worktree_cases(suite):
             suite.check(f"record/{label}", code, expected, err)
         finally:
             shutil.rmtree(root, ignore_errors=True)
+
+
+def submodule_scope_cases(suite):
+    """A sibling repository of the same owner is inside the rule.
+
+    The shape is the one that produced the hole: a tree of submodules where
+    the inner one carries its own constitution, so the walk stops there and
+    the only remote in view is the inner repository's. Every write naming a
+    sibling — the commonest tracker write there is — then read as another
+    organisation's business and went through ungated.
+    """
+    outer = make_project(CONSTITUTION, remote="acme/core")
+    try:
+        inner = make_project(CONSTITUTION, parent=outer, name="docs",
+                             remote="acme/docs")
+        for label, command, expected in [
+            ("gates a sibling of the same owner (--repo)",
+             f"gh issue comment 12 --repo acme/core --body '{CLAIM}'", 2),
+            ("gates a sibling of the same owner (-R)",
+             f"gh issue comment 12 -R acme/core --body '{CLAIM}'", 2),
+            ("ALLOWED (out of scope): another owner, from the same cwd",
+             f"gh issue comment 12 --repo other-org/core --body '{CLAIM}'", 0),
+        ]:
+            code, err = run(RECORD_HOOK, {
+                "tool_name": "Bash",
+                "tool_input": {"command": command},
+                "cwd": inner,
+            })
+            suite.check(f"record/{label}", code, expected, err)
+    finally:
+        shutil.rmtree(outer, ignore_errors=True)
+
+
+def deleted_cwd_case(suite):
+    """A working directory that has been deleted must not switch the gate off.
+
+    The session goes on running in it — a branch checkout removing a directory
+    is enough — and an early return on "not a directory" made every hook call
+    for the rest of that session inert, in silence.
+    """
+    root = make_project(CONSTITUTION)
+    try:
+        gone = os.path.join(root, "removed-while-running")
+        os.makedirs(gone)
+        os.rmdir(gone)
+        code, err = run(RECORD_HOOK, {
+            "tool_name": "Bash",
+            "tool_input": {"command": f"gh issue comment 12 --body '{CLAIM}'"},
+            "cwd": gone,
+        })
+        suite.check("record/a deleted cwd still gates from its ancestors",
+                    code, 2, err)
+    finally:
+        shutil.rmtree(root, ignore_errors=True)
 
 
 def subdirectory_case(suite):
@@ -768,6 +850,8 @@ def main():
     body_file_cases(suite)
     payload_cases(suite)
     worktree_cases(suite)
+    submodule_scope_cases(suite)
+    deleted_cwd_case(suite)
     subdirectory_case(suite)
     home_boundary_cases(suite)
     explain_case(suite)

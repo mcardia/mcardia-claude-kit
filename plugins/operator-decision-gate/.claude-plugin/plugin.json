@@ -1,7 +1,7 @@
 {
   "name": "operator-decision-gate",
   "description": "Applies and enforces the project's own operator-decision rule",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "author": {
     "name": "Mario Cardia"
   }
