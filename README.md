@@ -32,7 +32,7 @@ roughly in this order. See [plugins/sdd-generators/USAGE.md](plugins/sdd-generat
 
 | Command | Produces | Role |
 |---|---|---|
-| `/sdd-generators:constitution` | `methodology.md` + `AGENTS.md` | method pillars, source-of-truth hierarchy, artifact taxonomy (the anti-drift core) |
+| `/sdd-generators:constitution` | `methodology.md` + `AGENTS.md` | method pillars, source-of-truth hierarchy, artifact taxonomy (the anti-drift core), and the optional operator-decision section |
 | `/sdd-generators:prd` | a PRD | problem, goals + metrics, scope, behavior, non-functional targets |
 | `/sdd-generators:adr` | one `adr-NNN.md` | a single architecture decision: context, options, decision, trade-offs |
 | `/sdd-generators:spec` | `specs/<feature>/{spec,plan,tasks}.md` | per-feature WHAT → HOW → tasks |
@@ -40,9 +40,23 @@ roughly in this order. See [plugins/sdd-generators/USAGE.md](plugins/sdd-generat
 | `/sdd-generators:traceability` | `docs/traceability.md` | requirement/criterion/target → owning spec/task |
 | `/sdd-generators:doclint` | `scripts/check-docs.sh` | project-tailored docs lint: dead references, stale markers, name drift, coverage |
 | `/sdd-generators:readiness-audit` | audit verdict + fix plan | multi-lens agent audit → cross-verified fix plan → fresh-eyes re-verification |
+| `/sdd-generators:od` | an operator-decision record | applies the project's **own** operator-decision rule: verify cause and remedy at source → adversarial panel → grade → execute it or hand it over, as one fixed record either way |
 
 Authority flows top-down: **ADRs > standards > reference docs > running system**. Specs
 derive from ADRs and never override them.
+
+`/sdd-generators:od` also ships a saved workflow (`od-gate`, the `4N + 1` adversarial
+panel) and two hooks that refuse a handover missing its record — on a tracker write, and
+at the end of a turn. Both hooks read the rule out of the consuming project's own
+constitution and refuse nothing in a project that has none.
+
+**A project adopts the discipline by having the section, and by nothing else.**
+`/sdd-generators:constitution` has an operator-decisions stage that writes it — what
+counts as one, the gate, the grade scale and the line, the categories reserved whatever
+the grade, the record's fields, and where a record lands. The stage is skippable: decline
+it and the skill, the workflow and both hooks stay inert, which is a supported answer
+rather than a gap. See
+[plugins/sdd-generators/USAGE.md](plugins/sdd-generators/USAGE.md).
 
 ### What `sdd-generators` deliberately does not do
 
@@ -55,9 +69,14 @@ were removed from the plugin because a built-in already does them — use the bu
 | Review a diff before it merges | `/code-review` (`low`…`max`), `/code-review ultra` for a multi-agent cloud review of a branch or PR | `cascade-reviewer` |
 | Validate a review's findings against the design corpus (ADRs, standards, specs) | **No built-in does this** — it is a project-policy step, so it belongs in the consuming project's own `.claude/agents/`, not in a cross-project plugin. `/code-review`'s verify pass is a different axis: it rules a finding `CONFIRMED`/`PLAUSIBLE` against the *code*, not against the corpus | `cascade-validator` |
 | Security review of pending changes | `/security-review` | — |
-| Execute tasks as orchestrated multi-agent work | the **Workflow** tool (phases, `pipeline()`, `parallel()`, resume that reuses unchanged agent calls) and the **Agent** tool for a single task | `sdd-executor` |
 | Author Mermaid behavior diagrams (sequence, state, flowchart, class, ER) | Claude writes Mermaid from a spec unaided; Artifacts render ` ```mermaid ` fences natively, and the built-in `artifact-diagramming` skill covers when a diagram earns its place | `mermaid`, `mermaid-diagram-generator` |
 | Scope and run deep research | the built-in `deep-research` skill — it asks its own clarifying questions, fans out searches, adversarially verifies claims, and synthesizes a cited report | `research-briefing`, `research-document` |
+
+General task execution as orchestrated multi-agent work was removed too (`sdd-executor`):
+the **Workflow** tool covers it. `od-gate` is the one workflow that survives here, because
+it is not general execution — it is a fixed adversarial shape the operator-decision rule
+needs on every use, and re-authoring it per use is what makes the correct path the
+expensive one.
 
 Two further reductions were internal rather than delegated to a built-in: the
 `c4-diagram-generator` agent was folded into the `/sdd-generators:c4` skill, and the lens
@@ -66,8 +85,9 @@ one authority per fact, applied to the plugin itself.
 
 What remains is the part no built-in covers: the **SDD corpus discipline** — a
 constitution that fixes the source-of-truth hierarchy, the document generators that obey
-it, a traceability matrix, a generated docs lint, and a multi-lens adversarial readiness
-audit. TDD rules, review conventions and model assignments are *project* policy: they
+it, a traceability matrix, a generated docs lint, a multi-lens adversarial readiness
+audit, and the operator-decision gate that applies whatever rule that constitution
+states. TDD rules, review conventions and model assignments are *project* policy: they
 belong in the `AGENTS.md` / `methodology.md` that `/sdd-generators:constitution` writes,
 not in a cross-project plugin.
 

@@ -1,5 +1,5 @@
 ---
-description: "Interview that generates the SDD constitution (methodology.md + AGENTS.md): method pillars, source-of-truth hierarchy, and artifact taxonomy."
+description: "Interview that generates the SDD constitution (methodology.md + AGENTS.md): method pillars, source-of-truth hierarchy, artifact taxonomy, and — if the project wants one — the operator-decision section that /sdd-generators:od and its hooks read."
 disable-model-invocation: true
 ---
 
@@ -12,7 +12,7 @@ Conduct a structured interview to generate a clear, complete, and enforceable **
 The Constitution is the **root artifact** of an SDD project and consists of **two files**:
 
 - **`methodology.md`** — how work happens: the method pillars, the SDD lifecycle, the Git workflow, the review process, and the Definition of Done.
-- **`AGENTS.md`** — the operating rules every contributor reads first: project identity, the source-of-truth hierarchy, the artifact taxonomy and its competence boundaries (the anti-drift core), the editing and tooling discipline, and what the repository does not have yet.
+- **`AGENTS.md`** — the operating rules every contributor reads first: project identity, the source-of-truth hierarchy, the artifact taxonomy and its competence boundaries (the anti-drift core), the editing and tooling discipline, which decisions are reserved to the operator (if any are), and what the repository does not have yet.
 
 Every other document (PRD, ADR, spec/plan/tasks, reference docs, contracts) derives from these two and must obey them. They are authored once when the project starts and amended deliberately thereafter.
 
@@ -63,6 +63,7 @@ You must ensure you capture:
 - **File-editing and tooling discipline**: edit-existing vs create-new tool rules; prohibition of in-place shell text manipulation; tooling cost/license policy.
 - **Git workflow**: branch model, commit message convention, merge strategy, tagging.
 - **Review process**: whether code merges require a review gate (and its shape), and whether documentation is reviewed differently from code.
+- **Operator decisions** (optional — a project may decline the whole topic): whether a class of decisions is reserved to one person, and if so what makes a decision theirs, what must be verified before one is written and by whom, the ordered one-word grade scale and the line above which that person decides, the categories reserved to them at every grade, the record's fields, and where a record lands for each outcome.
 - **Definition of Done**: the closed checklist that marks a unit of work complete.
 - **Anti-fabrication clause**: an explicit list of things the project does NOT have yet, so agents do not invent them.
 
@@ -110,13 +111,50 @@ Help the user assign, for every artifact type they adopt, what it owns and what 
 
    Capture the code review gate (if any) and how documentation review differs.
 
-8. Definition of Done
+8. Operator decisions
+
+   Review settles whether a change is right; this settles **who rules on it**
+   when the session cannot. It comes after the review process because the two
+   are the same kind of thing — a gate a change passes before it lands — and
+   before the Definition of Done, which may name the record as a completion
+   criterion. By this point you also hold the artifact taxonomy and the Git
+   workflow, and you need both to ask where a record lands.
+
+   Open by asking whether the project reserves a class of decisions to one
+   person — the operator, the owner, the tech lead — who must rule before work
+   proceeds. **If it does not, skip the rest of this stage**, write no such
+   section, and say plainly what that means: `/sdd-generators:od` will have no
+   rule to apply, and its two hooks will refuse nothing in this project. That
+   is a valid answer, not a gap. Do not talk anyone into the discipline.
+
+   If it does, collect these, one question at a time:
+
+   1. What makes a decision that person's rather than the session's.
+   2. The gate: what must be verified before a decision is written as theirs,
+      and **by whom**. The second half is the one that bites: no pass can
+      verify itself, so the answer has to name something other than the work
+      that produced the finding.
+   3. The grade scale: the ordered one-word vocabulary a change is weighed
+      into, cheapest first, at least two words, and how the change is weighed.
+      Do **not** offer a house scale. If they do not know, offer two or three
+      scales of different shapes as hypotheses and let them pick or invent
+      their own; a scale presented as the standard one is another project's
+      policy wearing this project's name.
+   4. The line: the word at which that person starts deciding, and what the
+      session does at or below it.
+   5. The categories reserved to that person at **every** grade, whatever the
+      grade says. Ask for a short closed list; an open one decides nothing.
+   6. The record's fields, with their labels in the project's own words.
+   7. Where a record lands, for each outcome: handed over, and executed by the
+      session with the record as its receipt. They are often different places.
+
+9. Definition of Done
 
    Capture the closed checklist that marks work complete.
 
-9. Anti-fabrication clause
+10. Anti-fabrication clause
 
-   Capture the explicit list of things the project does not have yet.
+    Capture the explicit list of things the project does not have yet.
 
 At each stage:
 
@@ -184,6 +222,23 @@ At the end:
   "review_process": {
     "code_review": "",
     "documentation_review": ""
+  },
+  "operator_decisions": {
+    "what_counts": "",
+    "gate": "",
+    "grade_words": [],
+    "threshold": "",
+    "reserved_categories": [],
+    "record_fields": [
+      {
+        "label": "",
+        "states": ""
+      }
+    ],
+    "record_lands": {
+      "handed_over": "",
+      "receipt": ""
+    }
   },
   "definition_of_done": [],
   "anti_fabrication": []
@@ -280,6 +335,10 @@ as a documentation change.
 
 ### Output Template B — `AGENTS.md`
 
+Section 5 is written **only** when the operator-decisions stage collected
+answers. A project that declined the topic omits the section and renumbers
+what follows.
+
 ```markdown
 ---
 title: [project] — Agent Operating Rules
@@ -345,7 +404,42 @@ Each document type is the **single authority** over a defined set of facts and
 
 ---
 
-## 5. Amendment protocol
+## 5. Operator decisions
+
+[what makes a decision the operator's rather than the session's]
+
+**The gate.** Before a decision is written as the operator's, [what the gate
+verifies] is verified by [who or what verifies it], which is never the pass
+that produced the finding.
+
+**The grade.** Grade every change with exactly one word, from this ordered
+scale, cheapest first: `[grade word 1]`, `[grade word 2]`, `[grade word 3]`,
+`[grade word 4]`. Weigh the change whole, by [how a change is weighed].
+
+**The line.** At `[threshold grade word]` or below, [what the session does at
+or below the line]. Above `[threshold grade word]`, the decision is the
+operator's.
+
+**The operator's at every grade.** Whatever the grade says, these stay with
+the operator:
+
+- [reserved category 1]
+- [reserved category 2]
+
+**The record.** Asked or reported, a decision carries these fields and no
+shorter form:
+
+- **[field label 1]** — [what field 1 states]
+- **[field label 2]** — [what field 2 states]
+- **[field label 3]** — [what field 3 states]
+
+**Where it lands.** Handed to the operator: [where a handed-over record
+lands]. Executed by the session, the record as its receipt: [where a receipt
+lands].
+
+---
+
+## 6. Amendment protocol
 
 Once a documentation body is declared READY, any change to a spec, ADR, PRD,
 or standard carries its synchronization duties in the same work stage:
@@ -360,7 +454,7 @@ incomplete stage.
 
 ---
 
-## 6. What this repository does NOT have yet
+## 7. What this repository does NOT have yet
 
 Do not invent any of these. Add them only when a real feature or decision
 triggers them.
@@ -379,7 +473,9 @@ Before generating the two files:
 - Every artifact in `AGENTS.md` §3 has a non-overlapping "owns" statement; no fact is owned twice.
 - The one-authority-per-fact rule (`AGENTS.md` §3) has both a layering example and a duplication example.
 - The Definition of Done (`methodology.md` §5) is a closed, checkable list.
-- The anti-fabrication list (`AGENTS.md` §5) is present, even if short.
+- The anti-fabrication list (`AGENTS.md` §7) is present, even if short.
+- The operator-decision section (`AGENTS.md` §5) is present **only** if the stage collected answers, and absent without apology if it did not — in which case you said out loud that `/sdd-generators:od` and its hooks stay inert here.
+- If it is present, it is machine-readable as well as readable, because `/sdd-generators:od` and its two hooks parse it rather than carrying a copy of anybody's scale: the sentence that introduces the scale carries every grade word in backticks, in order, cheapest first, and carries no other backticked word; the sentence that draws the line names one of those same words, spelled the same way. Confirm it parsed, rather than assuming — `python3 "$CLAUDE_PLUGIN_ROOT/hooks/check-od-record.py" --explain .` prints the vocabulary and the threshold it read, or says the project is not gated at all.
 - Neither file contains architectural decisions (those belong in ADRs) or product requirements (those belong in the PRD).
 - The two files cross-reference each other but never restate each other's content.
 - Both file bodies carry no dates, version numbers, or change log.
@@ -410,4 +506,4 @@ Use defaults only if the user does not know how to answer. Mark them explicitly 
 
 Initial message to the user:
 
-Hello, I am an assistant for writing a project Constitution: the meta-rules that govern how your Spec-Driven Development project works. I will ask you some questions about your method, your source-of-truth hierarchy, which document types you will use and what each one owns, and your discipline rules. At the end I will generate the Constitution in the standard format and, if you want, also deliver it as structured JSON with English keys. Can we start with a two-line description of what the project is and who it is for?
+Hello, I am an assistant for writing a project Constitution: the meta-rules that govern how your Spec-Driven Development project works. I will ask you some questions about your method, your source-of-truth hierarchy, which document types you will use and what each one owns, your discipline rules, and whether any decisions are reserved to one person. At the end I will generate the Constitution in the standard format and, if you want, also deliver it as structured JSON with English keys. Can we start with a two-line description of what the project is and who it is for?

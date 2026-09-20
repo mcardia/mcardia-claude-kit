@@ -1,0 +1,28 @@
+{
+  "description": "Enforces the operator-decision rule at the two boundaries where it is broken: a tracker write that hands over or files a decision without the whole record, and a turn that ends having handed the operator a decision in prose. Both read the rule out of the project's own constitution and refuse nothing in a project whose constitution has no operator-decision section. They are not free there: each is a python3 process, measured at ~17 ms on every Bash call and every turn end, in every project, adopted or not. Run `python3 <plugin>/hooks/check-od-record.py --explain` in a directory to see whether it is gated and by which file.",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/check-od-record.py\"",
+            "timeout": 15
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/check-od-form.py\"",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  }
+}
