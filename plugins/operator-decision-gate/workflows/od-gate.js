@@ -21,7 +21,13 @@
  * lens was pointed at) are cross-item by nature.
  *
  * What each lens MEANS is defined in the `od-lens` agent and nowhere else.
- * This script names the lens and never restates it.
+ * This script names the lens and never restates its definition. The RECORD
+ * schema below is a different thing: its field descriptions are the cue the
+ * synthesiser reads at the moment it fills each field, so a few of them do
+ * echo a rule the agent owns. That is deliberate — a bare `Field 2` steers
+ * nothing — and it is why they are worded as cues rather than as the rule.
+ * Where any of them differs from the agent or from the project constitution,
+ * those win and the synthesiser is told to say so.
  *
  * Agent count is 4N + 1. Pass few items.
  *
