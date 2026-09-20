@@ -37,10 +37,11 @@ template. Two authors for one fact is the drift this kit exists to prevent, so t
 template lives there and this plugin carries no copy of it.
 
 You do not need that plugin. A section written by hand works identically, and the
-`/operator-decision-gate:od` skill states what it must settle and how its two
-machine-read sentences must be spelled — the grade scale in backticks, cheapest first,
-and a line sentence naming one of those same words. What you lose by hand-writing it is
-the interview, not the enforcement.
+`/operator-decision-gate:od` skill states what it must settle and exactly how its two
+machine-read sentences must be spelled, under *What the hooks' parser needs on top of
+that*. Read the contract there and not a summary of it: a summary is a second authority
+and drifts the first time either one is edited. What you lose by hand-writing the
+section is the interview, not the enforcement.
 
 ## Registered agent
 

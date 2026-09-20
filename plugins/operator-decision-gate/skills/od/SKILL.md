@@ -39,8 +39,8 @@ What the section must fix, for the rest of this cycle to mean anything: what cou
 
 The seven items above are what the *rule* must settle. Two of them are also read by machine, so their spelling is this plugin's contract and is stated here because the parser is here:
 
-- **The sentence that introduces the grade scale** carries every grade word in backticks, in order, cheapest first, and carries no other backticked word.
-- **The sentence that draws the line** names one of those same words, spelled the same way.
+- **The sentence that introduces the grade scale** carries every grade word in backticks, in order, cheapest first, and carries no other backticked word. The parser finds that sentence by a form of *grade* standing in it — `grade`, `grades`, `graded`, `grading`, `grau`, `gradua…` — so that word belongs there too, and **no sentence-ending punctuation may fall inside it**: the section is cut into sentences at every `.`, `!` or `?` followed by a space or a newline before the scale is looked for, so one inner full stop, an abbreviation included, leaves the grade word in one piece and the scale words in the next, and neither half parses.
+- **The sentence that draws the line** names one of those same words, spelled the same way, in one of the five constructions the parser reads and no other, writing that word where `X` stands: `at X or below`, `X or below`, `above X`, `acima de X`, and `X ou abaixo` / `X ou menos`. Naming it outside them draws no line the parser can see — *the operator decides from X upward* names the word and parses as no line at all, leaving the scale read and the above-the-line test skipped.
 
 Where that parse fails the hooks do not guess: a grade label with any value satisfies them and the above-the-line test is skipped entirely — the project reads as gated and is barely gated. So confirm the parse rather than assuming it, with the command at the end of this step.
 
@@ -55,7 +55,7 @@ Author neither the interview's questions nor the section itself here. Both belon
 
 Declining is an answer. A project that does not want the discipline writes no section, and nothing below ever fires — not a gap, and not something to argue anyone out of. To see which it is:
 
-    python3 "$CLAUDE_PLUGIN_ROOT/hooks/check-od-record.py" --explain .
+    python3 <this plugin's root>/hooks/check-od-record.py --explain .
 
 names the constitution the walk resolved and the vocabulary parsed out of it, or reports the project ungated and lists the filenames it looked for.
 
@@ -96,17 +96,28 @@ Where it lands is the constitution's routing sentence, read there and applied li
 
 The cycle above settles what the record contains. This is how the finished block reaches a person, and it is not polish: a block that cannot be answered from the top is answered late or not at all, and a receipt shaped like a question costs the operator a reply he did not owe.
 
-**How each field is WRITTEN belongs to the `od-lens` agent.** Its synthesis role defines the reachable-scenario rule for the standing field, the executable-recommendation rule, and the quote-the-corpus rule behind a reserved category. Read them there; none of them is restated here. What follows is only the shape of the block.
+**How each field is WRITTEN belongs to the `od-lens` agent.** Its synthesis role defines the reachable-scenario rule for the standing field, the executable-recommendation rule, and the quote-the-corpus rule behind a reserved category. Read them there; none of them is restated here. One thing that rule leaves to presentation: the scenario is **literal, never an analogy**. An analogy puts a translation step between the reader and the decision, and invites debugging the analogy instead of the system. Where nothing shipped reaches the scenario and only a deferred phase would, say exactly that: it is itself the finding, not a reason to reach for a picture. What follows is only the shape of the block.
 
-**Order it for a decision, not for a review.** The reader opens the block to answer something, not to audit a chain of reasoning. So: what is being decided, then what the reader would observe, then why it stands that way, then the recommendation. Reasoning supports the recommendation; it never precedes the question.
+**Order it for a decision, not for a review.** The reader opens the block to answer something, not to audit a chain of reasoning. So: what is being decided, then what the reader would observe, then why it stands that way, then what each way forward costs, then the recommendation. Reasoning supports the recommendation; it never precedes the question. **Cost, effort and risk are a step of that order and not a footnote to it** — a recommendation whose price is unstated cannot be answered, only agreed with, and agreement is not the thing being asked for. The remedy lens produces that sizing; this is where it lands.
 
 **Options go inline, in the block.** Never a question widget, never a popup, never a separate round trip that costs a turn. Where there are two or three ways to go, each gets its real shape — the screen the reader would see, the command they would run, the files that move — never an abstract label. "Option A: refactor" is not an option, it is a category.
+
+**A stack, tooling or library choice is scored under three lenses**, as a table inside the recommendation — one row per candidate, one column per lens. **Most native**: closest to the stdlib, the built-in or the first-party of the host platform. **Most used**: largest production adoption, active community. **Future-proof**: still right in three to five years, judged on release cadence, governance, and whether the platform is absorbing the thing. Mark the winner in every column, and write a lens that does not apply as `n/a` rather than dropping the column — a lens omitted silently reads as a lens nobody ran. End on the trade-off the winner buys, never on a bare verdict.
+
+**The evidence stands at the end, and is written once.** Paths, line numbers and quotes belong in their own field at the close of the block, not threaded through the prose that argues the case. Writing it in both places is where these blocks swell: the argument carries the anchors, the anchor field repeats them, and the reader reads the same three files twice to learn they are the same three files.
+
+**An uncontested item gets a label and half a line.** Full justification is for what is contested, or recommended for removal. Justifying the obvious is not thoroughness — it spends the attention the contested part needed, and buries it.
 
 **One block, in the constitution's own field labels and in the conversation's language.** This plugin does not name the fields; the constitution does. Render what it declares, in the order it declares.
 
 **The two directions differ in emphasis, not in shape.** Step 4 fixes the fields; what moves is where the block puts its weight. Asking: the recommendation is a proposal, the choice is live, and the block ends with that choice. Reporting: those same fields are a receipt for something already done, and the block ends with what was done and where it landed. A receipt dressed as a question is the commonest way this breaks in the reporting direction — "shall I proceed?" written under a change already made re-opens a decision the constitution's own line had settled.
 
-**Never a bare grade in a sentence in place of the block.** "This one is minor, so I went ahead" carries a grade and is not a record. The block is what lands, in both directions.
+**Never a bare grade in a sentence in place of the block.** "This one is minor, so I went ahead" carries a grade and is not a record. The block is what lands, in both directions. **Self-criticism is the trigger that breaks this**, and every recorded lapse was of that kind: a message owning the session's own error switches the writer into narrative, and the block dissolves into an account of what went wrong. Write the block first, then the diagnosis under it. That is the moment the form matters most — the reader is deciding whether to re-scope work that already went wrong, and a narrative makes them extract the decision from it themselves.
+
+**Two cases the single block does not cover.**
+
+- **Several at once** — a status map first, one line per item, then one block per item. Never a narrative the reader has to disassemble into decisions; disassembling it is the session's job, done before sending.
+- **Returning from a fleet of agents** — what came back, then what changes for the reader, then what the session got wrong, then what is next. Never the agents' own structure: it was written for a different reader, and forwarding it hands back the synthesis the fleet was run to produce.
 
 ### Two worked examples
 
