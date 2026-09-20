@@ -16,7 +16,7 @@ roughly in this order.
 
 | Command | Produces | Role |
 |---|---|---|
-| `/sdd-generators:constitution` | `methodology.md` + `AGENTS.md` | method pillars, source-of-truth hierarchy, artifact taxonomy (the anti-drift core) |
+| `/sdd-generators:constitution` | `methodology.md` + `AGENTS.md` | method pillars, source-of-truth hierarchy, artifact taxonomy (the anti-drift core), and the optional operator-decision section |
 | `/sdd-generators:prd` | a PRD | problem, goals + metrics, scope, behavior, non-functional targets |
 | `/sdd-generators:adr` | one `adr-NNN.md` | a single architecture decision: context, options, decision, trade-offs |
 | `/sdd-generators:spec` | `specs/<feature>/{spec,plan,tasks}.md` | per-feature WHAT → HOW → tasks |
@@ -84,6 +84,15 @@ finding none, they do nothing. That predicate is deliberate: a plugin's hooks lo
 adopted the rule would be a gate people switch off. A project opts in by having the rule,
 and by nothing else — no flag, no settings entry, no second file to drift.
 
+**Where that section comes from.** `/sdd-generators:constitution` has an
+operator-decisions stage that collects the whole rule — what counts as one, the gate, the
+grade scale and the line, the categories reserved whatever the grade, the record's fields,
+and where a record lands for each outcome — and an `AGENTS.md` template that renders it.
+The stage is skippable, and the interview talks nobody out of skipping it: a project that
+declines gets no section, `/sdd-generators:od` has no rule to apply, and both hooks stay
+inert. A project whose constitution predates the stage runs that stage alone and adds the
+section to the document it already has.
+
 Inert is not free. Each hook is a `python3` process: **about 17 ms on every Bash call and
 every turn end, in every project, adopted or not.** The Stop hook uses the
 `last_assistant_message` the host supplies rather than re-reading the transcript, which on
@@ -128,11 +137,13 @@ why a project grading `trivial|small|large|sweeping` is gated in its own vocabul
 never asked for another's. Where that parse fails, the hooks fall back to "a grade label
 carries some value" and skip the threshold test entirely, rather than guessing.
 
-Three things ARE the plugin's, and are named here so they are not mistaken for yours: the
+Four things ARE the plugin's, and are named here so they are not mistaken for yours: the
 adversarial panel; **two distinct `file:line` anchors** as the operational test that a
-cause and a remedy were both verified; and `grade: n/a` as the spelling for a record of a
-decision taken elsewhere. None of the three is in anybody's constitution. They are how a
-text gate checks a sentence that is.
+cause and a remedy were both verified; `grade: n/a` as the spelling for a record of a
+decision taken elsewhere; and the **four-rung sizing ladder** the `od-lens` remedy lens
+prices a fix against — used only where your constitution states no sizing policy of its
+own, and reported as the plugin's whenever it is used. None of the four is in anybody's
+constitution. They are how a text gate checks a sentence that is.
 
 The cheaper options, named and refused, because this kit's discipline is to write them
 down rather than to have weighed them privately:

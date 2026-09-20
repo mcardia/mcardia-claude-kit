@@ -77,7 +77,7 @@ const RECORD = {
     why: { type: 'string', description: 'Field 3 — the mechanism and the decision or omission that produced it, with anchors.' },
     recommendation_verb: { type: 'string', enum: ['KEEP', 'CHANGE'] },
     recommendation: { type: 'string', description: 'Field 4 — if CHANGE, exactly what changes: files, functions, contract rows. Executable as written by a fresh agent.' },
-    cheapest_tier: { type: 'string', description: 'All four tiers enumerated, and which one the remedy sits at.' },
+    cheapest_tier: { type: 'string', description: 'Every rung of the sizing ladder enumerated, and which one the remedy sits at. The ladder is the constitution\'s where it states a sizing policy, otherwise the plugin\'s four — say which was used.' },
     grade: { type: 'string', description: 'One word, taken from the grade vocabulary the project constitution states in its operator-decision section. Use that section\'s words exactly; do not substitute a scale from anywhere else.' },
     operator_axis: { type: 'string', description: 'The operator-only category this touches, named as the constitution names it, or `none`.' },
     operator_axis_quote: { type: 'string', description: 'If a category is claimed, the corpus sentence that makes it one, quoted with file and line, plus the strongest argument against. If none, name the live candidate and why it fails.' },

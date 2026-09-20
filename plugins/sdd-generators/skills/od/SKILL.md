@@ -31,11 +31,24 @@ It does **not** fire for a routine call the session owns — ceremony tier, orde
 
 ### 0. The rule must exist in this project
 
-Find the constitution — `AGENTS.md`, `docs/AGENTS.md`, or the methodology document — and read its operator-decision section **in full, now, before reasoning about the case**. Re-deriving it from memory each turn is how a session ends up flipping its own answer between turns.
-
-If the project has no such section, this skill has nothing to apply. Author it first — `/sdd-generators:constitution` owns that document — and say plainly that it did not exist. The hooks refuse nothing until it does, by design.
+Find the constitution — `AGENTS.md`, `docs/AGENTS.md`, `CLAUDE.md`, or the methodology document — and read its operator-decision section **in full, now, before reasoning about the case**. Re-deriving it from memory each turn is how a session ends up flipping its own answer between turns.
 
 What the section must fix, for the rest of this cycle to mean anything: what counts as an operator decision; the gate; the grade words and the line above which the operator decides; the categories that are the operator's at every grade; the record's fields; and where a record lands.
+
+#### Install the rule (first run only)
+
+If the project has no such section, this skill has nothing to apply. Say so plainly, improvise no rule, and do not hand the case over as though it were covered — there is no rule yet under which it could be. One interview authors the section: `/sdd-generators:constitution`, whose **operator-decisions stage** asks for every item above and whose `AGENTS.md` template renders them. Two ways in:
+
+- **No constitution yet** — run `/sdd-generators:constitution` whole; the stage sits after the review process.
+- **A constitution that predates the stage** — run that stage alone, and add the section it produces to the existing constitution in that document's own heading style and numbering.
+
+Author neither the questions nor the section here. Both belong to the `constitution` skill; a second copy in this file would diverge from the first the day either one changes.
+
+Declining is an answer. A project that does not want the discipline writes no section, and nothing below ever fires — not a gap, and not something to argue anyone out of. To see which it is:
+
+    python3 "$CLAUDE_PLUGIN_ROOT/hooks/check-od-record.py" --explain .
+
+names the constitution the walk resolved and the vocabulary parsed out of it, or reports the project ungated and lists the filenames it looked for.
 
 ### 1. Verify the cause AND the remedy at source
 
@@ -70,6 +83,59 @@ The record's shape is the same whether it asks or reports — the constitution f
 
 Where it lands is the constitution's routing sentence, read there and applied literally rather than by preference. **The grade decides WHO decides, never WHETHER it is written down.**
 
+## The form the record takes
+
+The cycle above settles what the record contains. This is how the finished block reaches a person, and it is not polish: a block that cannot be answered from the top is answered late or not at all, and a receipt shaped like a question costs the operator a reply he did not owe.
+
+**How each field is WRITTEN belongs to the `od-lens` agent.** Its synthesis role defines the reachable-scenario rule for the standing field, the executable-recommendation rule, and the quote-the-corpus rule behind a reserved category. Read them there; none of them is restated here. What follows is only the shape of the block.
+
+**Order it for a decision, not for a review.** The reader opens the block to answer something, not to audit a chain of reasoning. So: what is being decided, then what the reader would observe, then why it stands that way, then the recommendation. Reasoning supports the recommendation; it never precedes the question.
+
+**Options go inline, in the block.** Never a question widget, never a popup, never a separate round trip that costs a turn. Where there are two or three ways to go, each gets its real shape — the screen the reader would see, the command they would run, the files that move — never an abstract label. "Option A: refactor" is not an option, it is a category.
+
+**One block, in the constitution's own field labels and in the conversation's language.** This plugin does not name the fields; the constitution does. Render what it declares, in the order it declares.
+
+**The two directions differ in emphasis, not in shape.** Step 4 fixes the fields; what moves is where the block puts its weight. Asking: the recommendation is a proposal, the choice is live, and the block ends with that choice. Reporting: those same fields are a receipt for something already done, and the block ends with what was done and where it landed. A receipt dressed as a question is the commonest way this breaks in the reporting direction — "shall I proceed?" written under a change already made re-opens a decision the constitution's own line had settled.
+
+**Never a bare grade in a sentence in place of the block.** "This one is minor, so I went ahead" carries a grade and is not a record. The block is what lands, in both directions.
+
+### Two worked examples
+
+Both write the field labels as `<…>` placeholders, because the plugin does not name the fields. Substitute whatever the constitution declares.
+
+**Asking — a CHANGE handed over.**
+
+> **\<label: what is being decided\>** — whether the CSV export keeps returning every column to a viewer-role user.
+>
+> **\<label: how things stand\>** — a viewer opens Reports → Export on the shared account and downloads a file whose last four columns are the salary fields that same account cannot see anywhere in the UI.
+>
+> **\<label: why it stands that way\>** — the exporter serialises the row struct rather than the view model: `internal/export/csv.go:88` takes `*model.Employee`, and `internal/http/reports.go:212` hands it the unfiltered record.
+>
+> **\<label: the recommendation\>** — CHANGE. Two ways, and they are different products:
+>
+> - **Filter at the serialiser.** `csv.go:88` takes the view model. A viewer's file loses four columns; every other role's file is byte-identical to today's. One file, no API change.
+> - **Refuse the export to viewers.** `reports.go:212` returns 403 for that role and the Export button goes with it, so a viewer sees no button rather than a shorter file. Two files, plus a string for the empty state.
+>
+> **\<label: the grade\>** — \<the constitution's word for a change of this reach\>, which its line puts on the operator's side.
+>
+> **\<label: where verified\>** — `internal/export/csv.go:88`, `internal/http/reports.go:212`; od-gate panel, three lenses and a critic.
+>
+> Yours: the serialiser, the 403, or neither.
+
+**Reporting — a KEEP, as a receipt.**
+
+> **\<label: what is being decided\>** — whether the webhook sender's retry budget moves off 3.
+>
+> **\<label: how things stand\>** — a customer whose endpoint is down for four minutes sees one failed delivery and no retry row; the next attempt is the next event, hours later.
+>
+> **\<label: why it stands that way\>** — the budget is per request, not per endpoint: `internal/webhook/sender.go:54` resets it on every call.
+>
+> **\<label: the recommendation\>** — KEEP. A bigger number moves the failure later without removing it; what removes it is the per-endpoint backoff `docs/adr-019.md:22` already schedules.
+>
+> **\<label: the grade\>** — \<the constitution's word for a change of this reach\>, which its line leaves with the session. Executed as KEEP: nothing changed, and the finding is closed against ADR-019.
+>
+> **\<label: where verified\>** — `internal/webhook/sender.go:54`, `docs/adr-019.md:22`; od-gate panel.
+
 ## What the hooks refuse
 
 This plugin ships two hooks. Both refuse nothing in a project whose constitution has no operator-decision section — though each is still a `python3` process, about 17 ms on every Bash call and every turn end, adopted or not.
@@ -81,6 +147,5 @@ A hook firing is information, not an obstacle: it means the gate was skipped. Sa
 
 ## Rules
 
-- The record is written inline, as the block. Never a popup, never a question widget, never prose that describes a decision without carrying its fields.
 - Batch related findings into one panel run. Interactions between remedies are a question only the critic can answer, and it can only answer it for records it sees together.
 - Artifacts are English, whatever language the conversation uses.

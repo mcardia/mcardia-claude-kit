@@ -32,7 +32,7 @@ roughly in this order. See [plugins/sdd-generators/USAGE.md](plugins/sdd-generat
 
 | Command | Produces | Role |
 |---|---|---|
-| `/sdd-generators:constitution` | `methodology.md` + `AGENTS.md` | method pillars, source-of-truth hierarchy, artifact taxonomy (the anti-drift core) |
+| `/sdd-generators:constitution` | `methodology.md` + `AGENTS.md` | method pillars, source-of-truth hierarchy, artifact taxonomy (the anti-drift core), and the optional operator-decision section |
 | `/sdd-generators:prd` | a PRD | problem, goals + metrics, scope, behavior, non-functional targets |
 | `/sdd-generators:adr` | one `adr-NNN.md` | a single architecture decision: context, options, decision, trade-offs |
 | `/sdd-generators:spec` | `specs/<feature>/{spec,plan,tasks}.md` | per-feature WHAT → HOW → tasks |
@@ -48,7 +48,14 @@ derive from ADRs and never override them.
 `/sdd-generators:od` also ships a saved workflow (`od-gate`, the `4N + 1` adversarial
 panel) and two hooks that refuse a handover missing its record — on a tracker write, and
 at the end of a turn. Both hooks read the rule out of the consuming project's own
-constitution and refuse nothing in a project that has none. See
+constitution and refuse nothing in a project that has none.
+
+**A project adopts the discipline by having the section, and by nothing else.**
+`/sdd-generators:constitution` has an operator-decisions stage that writes it — what
+counts as one, the gate, the grade scale and the line, the categories reserved whatever
+the grade, the record's fields, and where a record lands. The stage is skippable: decline
+it and the skill, the workflow and both hooks stay inert, which is a supported answer
+rather than a gap. See
 [plugins/sdd-generators/USAGE.md](plugins/sdd-generators/USAGE.md).
 
 ### What `sdd-generators` deliberately does not do

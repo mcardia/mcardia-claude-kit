@@ -18,6 +18,7 @@ spelled both the same way would read as if the gate were closed.
 """
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -26,6 +27,12 @@ import tempfile
 HOOKS = os.path.dirname(os.path.abspath(__file__))
 RECORD_HOOK = os.path.join(HOOKS, "check-od-record.py")
 FORM_HOOK = os.path.join(HOOKS, "check-od-form.py")
+PLUGIN = os.path.dirname(HOOKS)
+CONSTITUTION_SKILL = os.path.join(PLUGIN, "skills", "constitution", "SKILL.md")
+
+sys.path.insert(0, HOOKS)
+
+import od_common  # noqa: E402
 
 CONSTITUTION = """# AGENTS.md
 
@@ -71,6 +78,49 @@ NO_VOCABULARY = """# AGENTS.md
 
 A question the coordinating session cannot settle is an operator decision.
 """
+
+# Sample answers for every placeholder in the operator-decision block of the
+# `constitution` generator's Output Template B. The vocabulary is deliberately
+# nobody's default — least of all this estate's — because a template and a
+# parser that only agree on five familiar words agree on nothing.
+TEMPLATE_ANSWERS = {
+    "what makes a decision the operator's rather than the session's":
+        "A decision is the operator's when it changes what the product "
+        "promises a customer, rather than how the code keeps that promise.",
+    "what the gate verifies": "the cause and the remedy, both at source",
+    "who or what verifies it":
+        "a fresh agent carrying none of the session's context",
+    "grade word 1": "cosmetic",
+    "grade word 2": "contained",
+    "grade word 3": "structural",
+    "grade word 4": "sweeping",
+    "how a change is weighed": "how far its blast radius reaches",
+    "threshold grade word": "contained",
+    "what the session does at or below the line":
+        "the session executes the recommendation and reports it as done",
+    "reserved category 1": "anything that costs money",
+    "reserved category 2": "anything a customer can see",
+    "field label 1": "Under decision",
+    "what field 1 states": "what is being decided, in one sentence",
+    "field label 2": "As it stands",
+    "what field 2 states": "what a named person does and what they see",
+    "field label 3": "Where verified",
+    "what field 3 states": "the anchors, for the cause and for the remedy",
+    "where a handed-over record lands": "the pull request thread",
+    "where a receipt lands": "the issue the work closes",
+}
+TEMPLATE_WORDS = "cosmetic, contained, structural, sweeping"
+TEMPLATE_THRESHOLD = "contained (above it: structural, sweeping)"
+
+# A record written in the vocabulary that template emits. No apostrophes: it
+# travels inside a single-quoted shell string.
+TEMPLATE_RECORD = (
+    "Under decision: whether the export keeps every column for a viewer. "
+    "Grade: contained. Where verified: internal/export/csv.go:88 and "
+    "internal/http/reports.go:212 - od-gate panel."
+)
+
+PLACEHOLDER = re.compile(r"\[([^\[\]]+)\]")
 
 FULL_RECORD = """Decision: whether the carrier write keeps its own statement.
 How things stand: a returning user hits the OAuth callback and sees a 500.
@@ -554,6 +604,75 @@ def form_source_cases(suite):
         shutil.rmtree(root, ignore_errors=True)
 
 
+def fill_template(template):
+    """`(template with sample answers substituted, placeholders with none)`."""
+    unanswered = []
+
+    def answer(match):
+        key = " ".join(match.group(1).split())
+        if key not in TEMPLATE_ANSWERS:
+            unanswered.append(key)
+            return match.group(0)
+        return TEMPLATE_ANSWERS[key]
+
+    return PLACEHOLDER.sub(answer, template), unanswered
+
+
+def template_cases(suite):
+    """The generator must write a constitution its own hooks can read.
+
+    A `constitution` run that emitted a section the gate cannot parse would
+    leave a project believing it is gated when it is not, and the failure
+    would be silent in both directions — nothing refused, nothing said. So
+    this fills the real template out of the real `SKILL.md` and puts the
+    result through `--explain` and through the record hook as subprocesses,
+    exactly as a project would.
+
+    `od_common` is imported here only to LOCATE the block — deliberately with
+    the same predicate the hooks use to find a section, so a heading the gate
+    would miss cannot be extracted and quietly tested anyway.
+    """
+    with open(CONSTITUTION_SKILL, encoding="utf-8") as fh:
+        skill = fh.read()
+
+    heading = od_common.OD_SECTION.search(skill)
+    suite.check("template/the hooks recognise the heading the template emits",
+                bool(heading), True,
+                "no heading in Output Template B that OD_SECTION matches: the "
+                "generated gate would ship silently off")
+    if not heading:
+        return
+
+    filled, unanswered = fill_template(od_common.section_text(skill))
+    suite.check("template/every placeholder in the block has a sample answer",
+                unanswered, [], f"unanswered: {unanswered}")
+    suite.check("template/the filled block leaves no placeholder behind",
+                "[" in filled, False, filled[:120])
+
+    root = make_project(f"# AGENTS.md\n\n{heading.group(0)}\n{filled}\n")
+    try:
+        proc = subprocess.run(
+            [sys.executable, RECORD_HOOK, "--explain", root],
+            input="", capture_output=True, text=True, timeout=20)
+        out = proc.stdout
+        suite.check("template/the parser reads the template's own vocabulary",
+                    f"vocabulary:    {TEMPLATE_WORDS}" in out, True, out[:200])
+        suite.check("template/the parser reads the template's own threshold",
+                    f"threshold:     {TEMPLATE_THRESHOLD}" in out, True,
+                    out[:200])
+
+        code, err = run(RECORD_HOOK, {
+            "tool_name": "Bash",
+            "tool_input": {
+                "command": f"gh issue comment 12 --body '{TEMPLATE_RECORD}'"},
+            "cwd": root,
+        })
+        suite.check("template/ALLOWED (compliant): a record in the words that "
+                    "template emits", code, 0, err)
+    finally:
+        shutil.rmtree(root, ignore_errors=True)
+
+
 def asymmetry_case(suite):
     """One record, two hooks, one verdict."""
     root = make_project(CONSTITUTION)
@@ -588,6 +707,7 @@ def main():
     form_cases(suite)
     form_source_cases(suite)
     asymmetry_case(suite)
+    template_cases(suite)
 
     total = suite.passed + len(suite.failures)
     print(f"{suite.passed}/{total} passed")
