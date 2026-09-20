@@ -16,6 +16,7 @@ satisfies the rule. `(hole)` means the gate cannot see the write at all — a
 documented limit of checking text without a shell, not a pass. A suite that
 spelled both the same way would read as if the gate were closed.
 """
+import glob
 import json
 import os
 import re
@@ -31,12 +32,41 @@ PLUGIN = os.path.dirname(HOOKS)
 # The template case reads the `constitution` generator's Output Template B out
 # of the SIBLING plugin. This plugin carries no copy of it: the generator owns
 # the section and this one only ever parses it, and two authors for one fact is
-# the drift the kit exists to prevent. The sibling sits beside this plugin both
-# in the repository and in an installed marketplace, so one hop up and across
-# finds it; where only this plugin is installed it is absent, which the case
-# reports rather than crashes on.
-CONSTITUTION_SKILL = os.path.join(os.path.dirname(PLUGIN), "sdd-generators",
-                                  "skills", "constitution", "SKILL.md")
+# the drift the kit exists to prevent.
+#
+# Where that sibling sits depends on which copy is running, and the two layouts
+# are NOT the same shape:
+#
+#   repository   <repo>/plugins/<plugin>/                  siblings side by side
+#   installed    <cache>/<marketplace>/<plugin>/<version>/ a version segment
+#                                                          under every plugin
+#
+# So one hop up and across finds it in the repository only; from an installed
+# copy it is two hops up and back down through a version directory whose name
+# this plugin cannot know. Both are tried, repository first. Where several
+# versions of the sibling are cached the highest-sorting one is read, because
+# an update leaves older directories behind and never newer ones. Where the
+# sibling is on neither path it is genuinely absent — this plugin installs
+# alone — which the case reports, with the paths it tried, rather than crashes
+# on.
+_SKILL_TAIL = ("skills", "constitution", "SKILL.md")
+CONSTITUTION_PATTERNS = (
+    os.path.join(os.path.dirname(PLUGIN), "sdd-generators", *_SKILL_TAIL),
+    os.path.join(os.path.dirname(os.path.dirname(PLUGIN)), "sdd-generators",
+                 "*", *_SKILL_TAIL),
+)
+
+
+def find_constitution_skill():
+    """The sibling's template, resolved across both layouts, or None."""
+    for pattern in CONSTITUTION_PATTERNS:
+        matches = sorted(glob.glob(pattern), reverse=True)
+        if matches:
+            return matches[0]
+    return None
+
+
+CONSTITUTION_SKILL = find_constitution_skill()
 
 sys.path.insert(0, HOOKS)
 
@@ -638,18 +668,20 @@ def template_cases(suite):
     subprocesses, exactly as a project would.
 
     It is the one case that reaches outside this plugin, and the only one that
-    cannot run when `sdd-generators` is not installed beside it. It says so and
-    returns; the count drops by these cases and the rest of the suite still
-    reports.
+    cannot run when the sibling is not found on either of the two layouts it
+    can sit on. It says so, prints every path it tried, and returns; the count
+    drops by these cases and the rest of the suite still reports.
 
     `od_common` is imported here only to LOCATE the block — deliberately with
     the same predicate the hooks use to find a section, so a heading the gate
     would miss cannot be extracted and quietly tested anyway.
     """
-    if not os.path.exists(CONSTITUTION_SKILL):
-        print("SKIP  template/*: the `sdd-generators` plugin is not installed "
-              "beside this one, so the template these hooks must parse "
-              f"({CONSTITUTION_SKILL}) is not there to read.")
+    if CONSTITUTION_SKILL is None:
+        print("SKIP  template/*: the `sdd-generators` plugin was not found "
+              "beside or near this one, so the template these hooks must "
+              "parse is not there to read. Tried:")
+        for pattern in CONSTITUTION_PATTERNS:
+            print(f"        {pattern}")
         return
 
     with open(CONSTITUTION_SKILL, encoding="utf-8") as fh:

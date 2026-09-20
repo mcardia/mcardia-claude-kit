@@ -41,7 +41,7 @@ commands (`/sdd-generators:*`, `/operator-decision-gate:*`, `/dependency-auditor
 available across **all** your projects, and each bundles everything it needs:
 `sdd-generators` its eight interview skills and the `docs-auditor` agent;
 `operator-decision-gate` its skill, the `od-lens` agent, the `od-gate` workflow and two
-hooks.
+hooks; `dependency-auditor` its command and the agent that runs the audit.
 
 The first two are independent installs with one deliberate seam. `operator-decision-gate`
 reads an operator-decision section out of the consuming project's constitution and never
@@ -53,15 +53,24 @@ installing `sdd-generators` for the one interview stage that produces it.
 
 ```sh
 claude plugin marketplace update mcardia-claude-kit              # refresh the marketplace clone from GitHub
-claude plugin update sdd-generators@mcardia-claude-kit           # then update each installed plugin, by name
-claude plugin update operator-decision-gate@mcardia-claude-kit
-claude plugin update dependency-auditor@mcardia-claude-kit
+claude plugin list                                               # which of the three this machine already has
+claude plugin update <plugin>@mcardia-claude-kit                 # each one it has, by name
+claude plugin install <plugin>@mcardia-claude-kit                # each one you want that it does not have
 ```
 
 Refreshing the marketplace updates nothing by itself, and `update` cannot install a
-plugin that was never installed — a plugin new to a machine is added with `install`,
-after the marketplace refresh. Each installed plugin is then updated by name, and only
-when its own version was bumped.
+plugin that was never installed — it fails with `Plugin "<name>" is not installed` and
+changes nothing. So the sequence asks the machine what it has instead of naming the
+three: what is there is updated by name, and only when its own version was bumped; what
+is missing is added with `install`. **An update that skips that second command leaves a
+plugin absent while reporting success on the others.**
+
+**The gate is the case where that silently removes enforcement.** Its skill, agent,
+workflow and both hooks shipped inside `sdd-generators` before `operator-decision-gate`
+became a plugin of its own. A machine that installed the generators then, and now only
+updates them, keeps the generators and has no gate — nothing refused, nothing said.
+`claude plugin install operator-decision-gate@mcardia-claude-kit` is what puts it back,
+once; it updates by name after that.
 
 `claude plugin update` prints **"Restart to apply changes."** **Restarting Claude Code
 is the reliable, version-independent way to apply the update** — a running session keeps

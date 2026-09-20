@@ -26,6 +26,11 @@ as it grows.
 Each plugin installs on its own; take the ones you want. Installing one makes its
 commands available to you across **all** your projects.
 
+Updating an existing machine is a different sequence, because `update` never adds a
+plugin the machine does not already have — follow
+[Update (end user)](AGENTS.md#update-end-user), which is the only place that path is
+written down.
+
 ## Commands
 
 ### sdd-generators
@@ -87,9 +92,9 @@ It also ships a saved workflow (`od-gate`, the `4N + 1` adversarial panel) and t
 that refuse a handover missing its record — on a tracker write, and at the end of a turn.
 
 **A project adopts the discipline by having the section in its constitution, and by
-nothing else.** All three components read the rule out of that section and refuse nothing
-in a project that has none — no flag, no settings entry, no second file to drift. This
-plugin never authors the section: the interview that does is
+nothing else.** Every component reads the rule out of that section on every run, and the
+plugin refuses nothing in a project that has none — no flag, no settings entry, no second
+file to drift. This plugin never authors the section: the interview that does is
 `/sdd-generators:constitution`, a separate install, whose operator-decisions stage is
 skippable — decline it and this plugin stays inert, which is a supported answer rather
 than a gap. A section written by hand works identically. See

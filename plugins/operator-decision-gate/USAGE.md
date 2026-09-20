@@ -32,11 +32,9 @@ same marketplace — a **separate install**:
 /plugin install sdd-generators@mcardia-claude-kit
 ```
 
-Its operator-decisions stage collects the whole rule — what counts as one, the gate, the
-grade scale and the line, the categories reserved whatever the grade, the record's
-fields, and where a record lands for each outcome — and an `AGENTS.md` template renders
-it. Two authors for one fact is the drift this kit exists to prevent, so the template
-lives there and this plugin carries no copy of it.
+Its operator-decisions stage collects the whole rule and renders it through an `AGENTS.md`
+template. Two authors for one fact is the drift this kit exists to prevent, so the
+template lives there and this plugin carries no copy of it.
 
 You do not need that plugin. A section written by hand works identically, and the
 `/operator-decision-gate:od` skill states what it must settle and how its two
@@ -100,8 +98,10 @@ project ACTIVE while accepting any grade value and skipping the above-the-line t
 `hooks/test_hooks.py` ships inside the installed payload too. It never runs on its own; it
 is there so that running it proves the *installed* copy behaves, not only the one in this
 repository. One group of its cases reads the `constitution` generator's template out of
-the sibling plugin; with `sdd-generators` not installed beside this one, that group says
-so and the rest still reports.
+the sibling plugin, and looks for it on both layouts — beside this plugin in the
+repository, and under the marketplace's cache directory, through the version segment,
+once installed. Where the sibling is on neither path — this plugin installs alone — that
+group prints the paths it tried and the rest still reports.
 
 ### What the hooks cannot see
 

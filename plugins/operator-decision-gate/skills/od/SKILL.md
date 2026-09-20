@@ -33,7 +33,7 @@ It does **not** fire for a routine call the session owns — ceremony tier, orde
 
 Find the constitution — `AGENTS.md`, `docs/AGENTS.md`, `CLAUDE.md`, or the methodology document — and read its operator-decision section **in full, now, before reasoning about the case**. Re-deriving it from memory each turn is how a session ends up flipping its own answer between turns.
 
-What the section must fix, for the rest of this cycle to mean anything: what counts as an operator decision; the gate; the grade words and the line above which the operator decides; the categories that are the operator's at every grade; the record's fields; and where a record lands.
+What the section must fix, for the rest of this cycle to mean anything: what counts as an operator decision; the gate; the grade words; the line above which the operator decides; the categories that are the operator's at every grade; the record's fields; and where a record lands.
 
 #### What the hooks' parser needs on top of that
 
