@@ -14,7 +14,7 @@
     },
     {
       "name": "operator-decision-gate",
-      "description": "Applies and enforces the project's own operator-decision rule: verification at source, a 4N+1 adversarial panel, a fixed record, and two hooks that refuse a handover without one. Inert in a project whose constitution has no operator-decision section — the section is authored by the constitution interview in sdd-generators",
+      "description": "Applies and enforces the project's own operator-decision rule: verification at source, a 4N+1 adversarial panel, a fixed record, and two hooks that refuse a handover without one. Inert in a project whose constitution has no operator-decision section \u2014 the section is authored by the constitution interview in sdd-generators",
       "source": "./plugins/operator-decision-gate",
       "version": "1.0.2"
     },
@@ -22,7 +22,7 @@
       "name": "autonomy-grant-gate",
       "description": "Refuses a turn that ends without declaring its own state, while a continuous autonomy grant is active in the session. A form check and not a predicate: three mechanical predicates were measured over 45 transcripts and 2,358 turn-ends and none fired on the stops that cost the operator his time. Ships a bilingual default vocabulary and an optional per-project override, plus a calibration script that self-checks before it prints",
       "source": "./plugins/autonomy-grant-gate",
-      "version": "1.0.0"
+      "version": "1.0.1"
     },
     {
       "name": "dependency-auditor",

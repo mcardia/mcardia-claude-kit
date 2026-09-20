@@ -60,7 +60,16 @@ _spec.loader.exec_module(gate)
 
 GRANT = "continue autonomamente"
 NO_LINE = "Phase 1 merged, gates green, PR open. Next up is phase 2."
-WITH_LINE = NO_LINE + "\n\nIN FLIGHT: the phase-2 executor agent."
+# A STOPPED line is self-contained, so it is what the controls declare. An
+# IN-FLIGHT line is a CLAIM the gate cross-checks against the transcript, so a
+# synthetic record carrying one with no launched agent behind it is refused —
+# correctly, and it is the shape `in-flight, nothing running` below exists to
+# pin.
+WITH_LINE = NO_LINE + "\n\nSTOPPED: operator decision"
+# The hole found in use: "in flight: nothing" satisfied the old form check.
+IN_FLIGHT_NEGATED = NO_LINE + "\n\nIN FLIGHT: nothing"
+# A named claim with nothing behind it — the form satisfied, the fact not.
+IN_FLIGHT_UNMET = NO_LINE + "\n\nIN FLIGHT: the phase-2 executor agent."
 INTERRUPT = "[Request interrupted by user]"
 
 
@@ -96,6 +105,13 @@ CONTROLS = {
         [("user", GRANT), ("assistant", NO_LINE)], 2, 1),
     "a grant, and a state line": (
         [("user", GRANT), ("assistant", WITH_LINE)], 0, 0),
+    # Both halves of the hole the gate's own designer fell into, within hours
+    # of arguing that the form was enough because a lie must be typed on
+    # purpose. It was typed, twice, and neither was noticed.
+    "a grant, and an in-flight line that negates itself": (
+        [("user", GRANT), ("assistant", IN_FLIGHT_NEGATED)], 2, 1),
+    "a grant, and an in-flight claim with nothing running": (
+        [("user", GRANT), ("assistant", IN_FLIGHT_UNMET)], 2, 1),
     # The failure that missed four of the five real stops: he gives the grant
     # once, then answers questions, and an expiring reading disarms the gate.
     "a grant then ten more messages (standing)": (
@@ -178,15 +194,31 @@ def count_file(path, config):
     ends = granted = fires = 0
     pending = None
     grant = False
+    # Mirrors the hook's cross-check. An in-flight claim is only satisfied
+    # while something is outstanding that will re-invoke the session, so the
+    # walk has to know the same fact at the same point — tracked incrementally
+    # because the answer differs turn by turn.
+    launched, notified = set(), set()
     try:
         handle = open(path, encoding="utf-8", errors="ignore")
     except OSError:
         return 0, 0, 0
+
+    def _fires(message):
+        declared = gate.state_line(message, config)
+        if declared == "stopped":
+            return False
+        if declared == "in-flight":
+            return not (launched - notified)
+        return True
+
     with handle:
         for raw in handle:
             raw = raw.strip()
             if not raw:
                 continue
+            if "<tool-use-id>" in raw:
+                notified.update(gate._NOTIFIED.findall(raw))
             try:
                 record = json.loads(raw)
             except ValueError:
@@ -194,6 +226,17 @@ def count_file(path, config):
             text = gate.assistant_text(record)
             if text is not None:
                 pending = text
+            content = (record.get("message") or {}).get("content")
+            if record.get("type") == "assistant" and isinstance(content, list):
+                for block in content:
+                    if not isinstance(block, dict) or block.get("type") != "tool_use":
+                        continue
+                    args = block.get("input") or {}
+                    background = isinstance(args, dict) and args.get("run_in_background")
+                    if block.get("name") in gate._REINVOKING_TOOLS \
+                            or (block.get("name") == "Bash" and background):
+                        launched.add(block.get("id"))
+            if text is not None:
                 continue
             if record.get("type") != "user":
                 continue
@@ -207,7 +250,7 @@ def count_file(path, config):
                 ends += 1
                 if grant:
                     granted += 1
-                    if pending.strip() and not gate.state_line(pending, config):
+                    if pending.strip() and _fires(pending):
                         fires += 1
                 pending = None
             if not grant and gate.has_phrase(typed, config["grant_phrases"]):
@@ -216,7 +259,7 @@ def count_file(path, config):
         ends += 1
         if grant:
             granted += 1
-            if pending.strip() and not gate.state_line(pending, config):
+            if pending.strip() and _fires(pending):
                 fires += 1
     return ends, granted, fires
 

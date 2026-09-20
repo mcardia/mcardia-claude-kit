@@ -67,6 +67,29 @@ An in-flight rest is free text — it names the thing, and no closed set can. **
 rest must name one of the configured reasons**, because an open reason field is an
 exemption the writer issues to itself.
 
+### An in-flight line is a claim, and it is checked
+
+Two ways it can be written and still be refused, both found in use within hours of
+1.0.0 shipping — by the session that designed the gate and argued the form was enough
+because a lie would have to be typed on purpose:
+
+- **It may not negate.** `IN FLIGHT: nothing` / `EM VOO: nada` is the omission wearing
+  the form. The first word of the rest is matched against a negation list. `no` and `na`
+  are deliberately NOT on it: in Portuguese they are the commonest prepositions, and
+  `EM VOO: no painel` is a true declaration.
+- **Something must actually be outstanding.** The gate counts launched `Agent`, `Task`,
+  `Workflow` and backgrounded `Bash` calls whose notification has not come back. Zero of
+  them and an in-flight line is refused with its own message, separate from the
+  missing-line one — because the mistake is different, and a gate that answered it
+  generically would teach that the line is a password.
+
+Waiting on CI, on a provider, or on the operator is **not** in flight: nothing there
+re-invokes the session, so under a grant those are polled, and stopping on one is
+stopping. The honest line for them is `STOPPED:` with a reason, or a tool call.
+
+Cost: a `STOPPED` line is self-contained and never opens the transcript. An in-flight
+line does, because it is a claim about the session rather than about the message.
+
 **`queue empty` is not an assertible exit, and the refusal says so.** It is discharged by
 an ACTION in the same turn — reading whatever the project uses to decide what comes next
 — and never by the claim. An exemption satisfied by a sentence the assistant writes for
@@ -99,7 +122,8 @@ every project on the machine:
   "grant_phrases": ["continue autonom", "luz verde"],
   "in_flight_prefixes": ["IN FLIGHT", "EM VOO"],
   "stopped_prefixes": ["STOPPED", "PARADO"],
-  "stop_reasons": ["queue empty", "red gate", "operator decision", "question"]
+  "stop_reasons": ["queue empty", "red gate", "operator decision", "question"],
+  "in_flight_negations": ["nothing", "none", "nada", "nenhum"]
 }
 ```
 
