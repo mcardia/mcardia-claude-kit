@@ -19,6 +19,12 @@
       "version": "1.0.2"
     },
     {
+      "name": "autonomy-grant-gate",
+      "description": "Refuses a turn that ends without declaring its own state, while a continuous autonomy grant is active in the session. A form check and not a predicate: three mechanical predicates were measured over 45 transcripts and 2,358 turn-ends and none fired on the stops that cost the operator his time. Ships a bilingual default vocabulary and an optional per-project override, plus a calibration script that self-checks before it prints",
+      "source": "./plugins/autonomy-grant-gate",
+      "version": "1.0.0"
+    },
+    {
       "name": "dependency-auditor",
       "description": "Read-only dependency health and security audit aligned with the project dependency-currency policy",
       "source": "./plugins/dependency-auditor",
