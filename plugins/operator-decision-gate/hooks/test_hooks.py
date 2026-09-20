@@ -44,11 +44,10 @@ PLUGIN = os.path.dirname(HOOKS)
 # So one hop up and across finds it in the repository only; from an installed
 # copy it is two hops up and back down through a version directory whose name
 # this plugin cannot know. Both are tried, repository first. Where several
-# versions of the sibling are cached the highest-sorting one is read, because
-# an update leaves older directories behind and never newer ones. Where the
-# sibling is on neither path it is genuinely absent — this plugin installs
-# alone — which the case reports, with the paths it tried, rather than crashes
-# on.
+# versions of the sibling are cached the NEWEST is read, because an update
+# leaves older directories behind and never newer ones. Where the sibling is
+# on neither path it is genuinely absent — this plugin installs alone — which
+# the case reports, with the paths it tried, rather than crashes on.
 _SKILL_TAIL = ("skills", "constitution", "SKILL.md")
 CONSTITUTION_PATTERNS = (
     os.path.join(os.path.dirname(PLUGIN), "sdd-generators", *_SKILL_TAIL),
@@ -57,12 +56,28 @@ CONSTITUTION_PATTERNS = (
 )
 
 
+def _version_key(path):
+    """Sort a cached sibling by its version directory, numerically.
+
+    Sorting these as strings picks `3.0.0` over `10.0.0`, so the first
+    double-digit major would silently read a stale template and the contract
+    test would go green against the wrong side of it. The segments are
+    compared as integers where they are integers, and the raw name breaks
+    ties so a non-numeric directory still orders deterministically.
+    """
+    name = os.path.basename(os.path.dirname(os.path.dirname(
+        os.path.dirname(path))))
+    parts = tuple(int(p) if p.isdigit() else -1
+                  for p in re.split(r"[.+-]", name))
+    return (parts, name)
+
+
 def find_constitution_skill():
     """The sibling's template, resolved across both layouts, or None."""
     for pattern in CONSTITUTION_PATTERNS:
-        matches = sorted(glob.glob(pattern), reverse=True)
+        matches = glob.glob(pattern)
         if matches:
-            return matches[0]
+            return max(matches, key=_version_key)
     return None
 
 
