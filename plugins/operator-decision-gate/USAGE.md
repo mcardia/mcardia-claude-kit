@@ -37,10 +37,11 @@ template. Two authors for one fact is the drift this kit exists to prevent, so t
 template lives there and this plugin carries no copy of it.
 
 You do not need that plugin. A section written by hand works identically, and the
-`/operator-decision-gate:od` skill states what it must settle and how its two
-machine-read sentences must be spelled — the grade scale in backticks, cheapest first,
-and a line sentence naming one of those same words. What you lose by hand-writing it is
-the interview, not the enforcement.
+`/operator-decision-gate:od` skill states what it must settle and exactly how its two
+machine-read sentences must be spelled, under *What the hooks' parser needs on top of
+that*. Read the contract there and not a summary of it: a summary is a second authority
+and drifts the first time either one is edited. What you lose by hand-writing the
+section is the interview, not the enforcement.
 
 ## Registered agent
 
@@ -86,7 +87,7 @@ a 35.4 MB transcript is 17 ms instead of 66 ms.
 ### Is this project gated, and by what?
 
 ```sh
-python3 <this plugin's root>/hooks/check-od-record.py --explain [DIR]
+python3 ~/.claude/plugins/marketplaces/mcardia-claude-kit/plugins/operator-decision-gate/hooks/check-od-record.py --explain [DIR]
 ```
 
 Prints the constitution the walk resolved, the grade vocabulary parsed out of it and the
@@ -94,6 +95,10 @@ threshold word, or says `INERT` and lists the filenames it looked for. It is the
 to see what the vocabulary parser actually read — and worth running once per project,
 because a section whose scale sentence the parser could not read still reports the
 project ACTIVE while accepting any grade value and skipping the above-the-line test.
+
+That path is the marketplace clone, which carries no version segment and so can be
+pasted as it stands; the installed copy of the same file is this plugin's `installPath`
+in `~/.claude/plugins/installed_plugins.json`.
 
 `hooks/test_hooks.py` ships inside the installed payload too. It never runs on its own; it
 is there so that running it proves the *installed* copy behaves, not only the one in this
