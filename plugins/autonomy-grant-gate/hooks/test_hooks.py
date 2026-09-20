@@ -37,11 +37,20 @@ def transcript(root, human, final, name="t.jsonl", extra=()):
     """A transcript: one human message, optional more, one final assistant one.
 
     `human` is a list of `(kind, text)`, where kind is `user`, `meta` or
-    `summary` — the two harness-owned shapes a grant can hide in.
+    `summary` — the two harness-owned shapes a grant can hide in. A `launch`
+    kind writes an assistant record that STARTS an agent and never notifies,
+    which is what makes an IN-FLIGHT line true rather than merely written.
     """
     path = os.path.join(root, name)
     with open(path, "w", encoding="utf-8") as handle:
         for kind, text in human:
+            if kind == "launch":
+                handle.write(json.dumps(
+                    {"type": "assistant",
+                     "message": {"content": [
+                         {"type": "tool_use", "id": f"toolu_{text}",
+                          "name": "Agent", "input": {}}]}}) + "\n")
+                continue
             record = {"type": "user", "message": {"content": text}}
             if kind == "meta":
                 record["isMeta"] = True
@@ -73,12 +82,26 @@ def run(payload, raw=None):
 CASES = [
     ("blocks a grant with no state line",
      [("user", GRANT)], PLAIN, (), 2),
-    ("ALLOWED (compliant): IN FLIGHT",
-     [("user", GRANT)], PLAIN + "\n\nIN FLIGHT: the phase-2 executor agent.",
-     (), 0),
-    ("ALLOWED (compliant): EM VOO",
-     [("user", GRANT)], PLAIN + "\n\nEM VOO: o agente executor da fase 2.",
-     (), 0),
+    ("ALLOWED (compliant): IN FLIGHT, with an agent actually running",
+     [("user", GRANT), ("launch", "01AAA")],
+     PLAIN + "\n\nIN FLIGHT: the phase-2 executor agent.", (), 0),
+    ("ALLOWED (compliant): EM VOO, with an agent actually running",
+     [("user", GRANT), ("launch", "01BBB")],
+     PLAIN + "\n\nEM VOO: o agente executor da fase 2.", (), 0),
+    # The hole found in use, hours after this gate shipped: its own designer
+    # ended two turns with "in flight: nothing" and the form check passed both.
+    ("blocks IN FLIGHT that negates itself (en)",
+     [("user", GRANT), ("launch", "01CCC")],
+     PLAIN + "\n\nIN FLIGHT: nothing", (), 2),
+    ("blocks EM VOO that negates itself (pt-BR)",
+     [("user", GRANT), ("launch", "01DDD")],
+     PLAIN + "\n\nEM VOO: nada", (), 2),
+    # The form satisfied and the fact not: a named claim with nothing behind
+    # it. Waiting on CI or on the operator is not in flight — under a grant
+    # those are polled.
+    ("blocks IN FLIGHT naming something when nothing is running",
+     [("user", GRANT)],
+     PLAIN + "\n\nIN FLIGHT: the CI checks on the PR.", (), 2),
     ("ALLOWED (compliant): STOPPED: queue empty",
      [("user", GRANT)], PLAIN + "\nSTOPPED: queue empty", (), 0),
     ("ALLOWED (compliant): STOPPED: red gate",
@@ -105,7 +128,7 @@ CASES = [
     ("blocks a state line with nothing after the colon",
      [("user", GRANT)], PLAIN + "\nEM VOO:", (), 2),
     ("ALLOWED (compliant): the line is decorated and not last",
-     [("user", GRANT)],
+     [("user", GRANT), ("launch", "01EEE")],
      "- **EM VOO:** o executor da fase 2.\n\nAnd here is the rest.", (), 0),
     ("ALLOWED (compliant): the line is a list bullet",
      [("user", GRANT)], PLAIN + "\n- STOPPED: question", (), 0),

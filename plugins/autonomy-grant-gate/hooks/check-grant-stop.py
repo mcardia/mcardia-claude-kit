@@ -114,6 +114,26 @@ DEFAULT_GRANT_PHRASES = (
 # the point is to name the thing, and no closed set can.
 DEFAULT_IN_FLIGHT_PREFIXES = ("IN FLIGHT", "EM VOO")
 
+# THE HOLE THIS CLOSES WAS FOUND IN USE, ON THE SESSION THAT DESIGNED THE GATE.
+# Its argument for checking the FORM rather than the fact was that a lie would
+# have to be typed on purpose. Within hours it typed `EM VOO: nada` — "in
+# flight: nothing" — to end two turns, and the gate passed both, because `nada`
+# is a non-empty rest. A declaration that names nothing is not a declaration;
+# it is the omission wearing the form. Measured on that session's transcript:
+# 2 of its last 6 turn-ends.
+# Matched against the FIRST WORD of the rest, not the whole of it: the form
+# that got through in use was `EM VOO: nada — o que falta é meu`, a negation
+# with a clause after it, which an exact match does not see.
+#
+# `no` and `na` are deliberately absent though they negate in English: in
+# Portuguese they are the commonest prepositions, and `EM VOO: no painel` is
+# a true declaration this gate must not refuse. A gate whose vocabulary
+# collides across its own two languages teaches that it is noise.
+DEFAULT_IN_FLIGHT_NEGATIONS = (
+    "nada", "nenhum", "nenhuma", "nenhum(a)", "vazio", "zero",
+    "nothing", "none", "nil", "n/a", "empty", "-", "—", "–",
+)
+
 # The turn really is over. These demand a reason from the closed set below,
 # because an open reason field is an exemption the writer issues to itself.
 DEFAULT_STOPPED_PREFIXES = ("STOPPED", "PARADO")
@@ -128,9 +148,22 @@ DEFAULT_STOP_REASONS = (
 
 CONFIG_NAME = os.path.join(".claude", "autonomy-grant.json")
 KEYS = ("grant_phrases", "in_flight_prefixes", "stopped_prefixes",
-        "stop_reasons")
+        "stop_reasons", "in_flight_negations")
 DEFAULTS = dict(zip(KEYS, (DEFAULT_GRANT_PHRASES, DEFAULT_IN_FLIGHT_PREFIXES,
-                           DEFAULT_STOPPED_PREFIXES, DEFAULT_STOP_REASONS)))
+                           DEFAULT_STOPPED_PREFIXES, DEFAULT_STOP_REASONS,
+                           DEFAULT_IN_FLIGHT_NEGATIONS)))
+
+# The tools whose completion RE-INVOKES the session. An in-flight claim is
+# about one of these and nothing else: a CI run, a provider, a colleague and
+# the operator's own word all leave the session to poll, which under a grant
+# is stopping. Naming them here is what lets the claim be checked instead of
+# taken.
+_REINVOKING_TOOLS = ("Agent", "Task", "Workflow")
+# A notification names the tool_use it answers, OUTSIDE the `message` object.
+# Searching only inside it matches nothing and leaves every launch live for
+# ever — a bug this gate's own designer shipped twice in the measurement that
+# produced the gate.
+_NOTIFIED = re.compile(r"<tool-use-id>(toolu_[A-Za-z0-9]+)</tool-use-id>")
 
 # Harness envelopes. Stripped from a user message before the grant phrases are
 # matched, so that a grant quoted inside one is not the operator saying it —
@@ -272,23 +305,84 @@ def has_phrase(text, phrases):
 
 
 def state_line(text, config):
-    """Whether the message declares its own state, anywhere in it.
+    """What the message declares about itself: "in-flight", "stopped" or None.
 
     One line: a prefix, a colon, and a rest. An in-flight rest is free text —
-    it names what will re-invoke the session, and no closed set can. A stopped
-    rest must name one of the configured reasons, because an open reason field
-    is an exemption the writer issues to itself.
+    it names what will re-invoke the session, and no closed set can — except
+    that it may not NEGATE, because "in flight: nothing" is the omission
+    wearing the form. A stopped rest must name one of the configured reasons,
+    because an open reason field is an exemption the writer issues to itself.
+
+    An in-flight claim is returned rather than accepted: main cross-checks it
+    against the transcript, since the whole weakness of a form is that the
+    form can be satisfied by a sentence nobody has to mean.
     """
     if not text:
-        return False
+        return None
     for line in text.splitlines():
         rest = _after_prefix(line, config["in_flight_prefixes"])
         if rest:
-            return True
+            if _negates(rest, config["in_flight_negations"]):
+                return None
+            return "in-flight"
         rest = _after_prefix(line, config["stopped_prefixes"])
         if rest and has_phrase(rest, config["stop_reasons"]):
-            return True
-    return False
+            return "stopped"
+    return None
+
+
+def _negates(rest, negations):
+    """Whether an in-flight rest names nothing, reading its FIRST WORD.
+
+    First word rather than the whole rest, because what got through in use
+    carried a clause after the negation. Decoration is stripped from both
+    ends; a rest that is decoration alone negates too.
+    """
+    cleaned = rest.strip().strip("*_`~ ").strip()
+    if not cleaned:
+        return True
+    head = re.split(r"[\s.,;:!?…]+", cleaned, maxsplit=1)[0].strip("*_`").lower()
+    return head in tuple(n.lower() for n in negations)
+
+
+def live_reinvoking_tasks(path):
+    """How many launched Agent/Task/Workflow calls have not yet notified.
+
+    This is what an in-flight claim MEANS, so it is what the claim is checked
+    against. Zero of them and a turn that says it is waiting is a turn that
+    has stopped: nothing will wake the session, and the operator learns it by
+    coming back.
+    """
+    launched, notified = set(), set()
+    try:
+        handle = open(path, encoding="utf-8", errors="ignore")
+    except OSError:
+        return 0
+    with handle:
+        for raw in handle:
+            raw = raw.strip()
+            if not raw:
+                continue
+            if "<tool-use-id>" in raw:
+                notified.update(_NOTIFIED.findall(raw))
+            try:
+                record = json.loads(raw)
+            except (json.JSONDecodeError, ValueError):
+                continue
+            if record.get("type") != "assistant":
+                continue
+            content = (record.get("message") or {}).get("content") or []
+            if not isinstance(content, list):
+                continue
+            for block in content:
+                if not isinstance(block, dict) or block.get("type") != "tool_use":
+                    continue
+                name = block.get("name")
+                args = block.get("input") or {}
+                background = isinstance(args, dict) and args.get("run_in_background")
+                if name in _REINVOKING_TOOLS or (name == "Bash" and background):
+                    launched.add(block.get("id"))
+    return len(launched - notified)
 
 
 def _after_prefix(line, prefixes):
@@ -376,6 +470,28 @@ def refusal(config):
     )
 
 
+def unmet_claim(config):
+    """What a turn is told when it claims to be waiting and nothing is.
+
+    Separate wording from the missing-line refusal, because the mistake is
+    different: the form was satisfied and the fact was not. Saying so is the
+    point — a gate that answered this with the generic message would teach
+    that the line is a password.
+    """
+    in_flight = config["in_flight_prefixes"][0]
+    stopped = config["stopped_prefixes"][0]
+    return (
+        f"AUTONOMY GRANT: this turn declares `{in_flight}` and NOTHING is in "
+        f"flight — no agent, workflow or background command is outstanding, so "
+        f"nothing will re-invoke this session. Waiting on CI, on a provider, "
+        f"or on the operator is not in flight: under a grant those are polled, "
+        f"and stopping on one is stopping.\n"
+        f"Either start the next unblocked item in THIS turn — that is what the "
+        f"grant asked for and it is cheaper than the sentence defending the "
+        f"pause — or say `{stopped}: <reason>` and mean it."
+    )
+
+
 def main():
     try:
         payload = json.load(sys.stdin)
@@ -389,25 +505,36 @@ def main():
     if complaint:
         sys.stderr.write(f"autonomy-grant-gate: {complaint}\n")
 
-    # The host documents `last_assistant_message` as exactly this text. When it
-    # is there and carries the line, the turn is compliant and the transcript
-    # is never opened — which is the whole of the cost control.
+    path = payload.get("transcript_path") or ""
+    # The host documents `last_assistant_message` as exactly this text. A
+    # STOPPED line is self-contained, so the transcript is never opened for
+    # one — that is the cost control. An IN-FLIGHT line is a claim ABOUT the
+    # session, so it is the one shape that must be paid for.
     text = payload.get("last_assistant_message")
-    if text is not None and state_line(text, config):
+    declared = state_line(text, config) if text is not None else None
+    if declared == "stopped":
         return 0
-    grant, scanned = scan(payload.get("transcript_path") or "", config,
-                          want_text=text is None)
+    if declared == "in-flight" and live_reinvoking_tasks(path) > 0:
+        return 0
+
+    grant, scanned = scan(path, config, want_text=text is None)
     if not grant:
         return 0
     if text is None:
         text = scanned
+        declared = state_line(text, config)
     # A final assistant record with no text at all declares nothing, but it is
     # also not a turn ending in prose: at a real stop the last record carries
     # the message. Refusing there would be refusing a transcript artifact.
     if not (text or "").strip():
         return 0
-    if state_line(text, config):
+    if declared == "stopped":
         return 0
+    if declared == "in-flight":
+        if live_reinvoking_tasks(path) > 0:
+            return 0
+        sys.stderr.write(unmet_claim(config) + "\n")
+        return 2
     sys.stderr.write(refusal(config) + "\n")
     return 2
 
