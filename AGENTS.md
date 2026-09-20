@@ -112,7 +112,19 @@ Code and docs live only in this repo; changes reach users by publishing a new ve
    claude plugin validate plugins/operator-decision-gate
    claude plugin validate plugins/dependency-auditor
    ```
-5. After merge, each machine picks up the release via the **Update (end user)** steps
+5. **Run the behavioural suite** if the change touched `operator-decision-gate`:
+   ```sh
+   python3 plugins/operator-decision-gate/hooks/test_hooks.py
+   ```
+   `claude plugin validate` reads manifests; it does not run anything. Those hooks are
+   the only executable code this marketplace ships and they REFUSE tool calls, so a
+   regression there does not raise an error — the gate quietly stops guarding, in every
+   project that adopted the rule. Six of the cases hold that plugin's parser and the
+   `constitution` generator's template to one contract across a plugin boundary; they
+   SKIP, saying so and naming the paths they tried, when the sibling is not present.
+   **A skip is not a pass** — from a checkout of this repository both plugins are there
+   and the full count must run.
+6. After merge, each machine picks up the release via the **Update (end user)** steps
    above. A plugin update only triggers when the version was bumped.
 
 ## Why this matters
