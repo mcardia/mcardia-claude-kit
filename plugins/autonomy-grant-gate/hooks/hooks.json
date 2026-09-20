@@ -1,0 +1,16 @@
+{
+  "description": "Refuses a turn that ends without declaring its own state, but only while a continuous autonomy grant is active in the session — read out of the transcript, standing from the message that gives it. It checks the FORM rather than whether stopping was right: three mechanical predicates were measured against 45 transcripts and 2,358 turn-ends and none of them fired on the five stops that actually cost the operator his time. Unlike this kit's operator-decision gate it has no project scope, because a grant is a conversational act and no corpus section declares it; it is self-limiting instead — in a project where nobody grants autonomy, it never fires. It is not free there: a python3 process on every turn end in every project, measured at ~15 ms when the host hands it the final message or the transcript is small, ~27 ms on a median 2.7 MB transcript and ~153 ms on a 36.5 MB one, because proving a grant ABSENT means reading every record. Run `python3 <plugin>/hooks/calibrate.py <transcript-dir>` to arm it with a project's own numbers before trusting it.",
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/check-grant-stop.py\"",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  }
+}

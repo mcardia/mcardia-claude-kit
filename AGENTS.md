@@ -1,9 +1,9 @@
 # AGENTS.md — mcardia-claude-kit
 
-This repository is a **Claude Code marketplace** (`mcardia-claude-kit`) shipping three
-plugins: `sdd-generators`, `operator-decision-gate` and `dependency-auditor`. Everything
-an end user runs is delivered **through the plugin**. There is exactly one supported way
-to install and update it, described below.
+This repository is a **Claude Code marketplace** (`mcardia-claude-kit`) shipping four
+plugins: `sdd-generators`, `operator-decision-gate`, `autonomy-grant-gate` and
+`dependency-auditor`. Everything an end user runs is delivered **through the plugin**.
+There is exactly one supported way to install and update it, described below.
 
 ## Golden rule: the plugin is the only delivery mechanism
 
@@ -24,6 +24,7 @@ In an interactive Claude Code session:
 /plugin marketplace add mcardia/mcardia-claude-kit
 /plugin install sdd-generators@mcardia-claude-kit
 /plugin install operator-decision-gate@mcardia-claude-kit
+/plugin install autonomy-grant-gate@mcardia-claude-kit
 /plugin install dependency-auditor@mcardia-claude-kit
 ```
 
@@ -33,6 +34,7 @@ Equivalent CLI form:
 claude plugin marketplace add mcardia/mcardia-claude-kit
 claude plugin install sdd-generators@mcardia-claude-kit
 claude plugin install operator-decision-gate@mcardia-claude-kit
+claude plugin install autonomy-grant-gate@mcardia-claude-kit
 claude plugin install dependency-auditor@mcardia-claude-kit
 ```
 
@@ -41,7 +43,9 @@ commands (`/sdd-generators:*`, `/operator-decision-gate:*`, `/dependency-auditor
 available across **all** your projects, and each bundles everything it needs:
 `sdd-generators` its eight interview skills and the `docs-auditor` agent;
 `operator-decision-gate` its skill, the `od-lens` agent, the `od-gate` workflow and two
-hooks; `dependency-auditor` its command and the agent that runs the audit.
+hooks; `autonomy-grant-gate` one `Stop` hook, a calibration script and their suite, and
+registers no command at all; `dependency-auditor` its command and the agent that runs
+the audit.
 
 The first two are independent installs with one deliberate seam. `operator-decision-gate`
 reads an operator-decision section out of the consuming project's constitution and never
@@ -49,11 +53,20 @@ authors it; the interview that authors it is `/sdd-generators:constitution`. Ins
 gate alone and it stays inert until that section exists — written by hand, or by
 installing `sdd-generators` for the one interview stage that produces it.
 
+`autonomy-grant-gate` takes the opposite stance on purpose, and it is the only plugin
+here that does. A continuous autonomy grant is a conversational act, not a corpus
+section, so there is nothing to parse and no opt-in to detect: it **ships a default
+vocabulary**, applies wherever it is installed, and is self-limiting only in practice —
+in a project where nobody grants autonomy it never fires, but its `python3` process runs
+on every turn end there all the same. An optional `.claude/autonomy-grant.json` in the
+project replaces the words. The departure and its price are stated in that plugin's
+USAGE.
+
 ## Update (end user)
 
 ```sh
 claude plugin marketplace update mcardia-claude-kit              # refresh the marketplace clone from GitHub
-claude plugin list                                               # which of the three this machine already has
+claude plugin list                                               # which of the four this machine already has
 claude plugin update <plugin>@mcardia-claude-kit                 # each one it has, by name
 claude plugin install <plugin>@mcardia-claude-kit                # each one you want that it does not have
 ```
@@ -61,7 +74,7 @@ claude plugin install <plugin>@mcardia-claude-kit                # each one you 
 Refreshing the marketplace updates nothing by itself, and `update` cannot install a
 plugin that was never installed — it fails with `Plugin "<name>" is not installed` and
 changes nothing. So the sequence asks the machine what it has instead of naming the
-three: what is there is updated by name, and only when its own version was bumped; what
+four: what is there is updated by name, and only when its own version was bumped; what
 is missing is added with `install`. **An update that skips that second command leaves a
 plugin absent while reporting success on the others.**
 
@@ -110,20 +123,22 @@ Code and docs live only in this repo; changes reach users by publishing a new ve
    ```sh
    claude plugin validate plugins/sdd-generators
    claude plugin validate plugins/operator-decision-gate
+   claude plugin validate plugins/autonomy-grant-gate
    claude plugin validate plugins/dependency-auditor
    ```
-5. **Run the behavioural suite** if the change touched `operator-decision-gate`:
+5. **Run the behavioural suite** of each gate the change touched:
    ```sh
    python3 plugins/operator-decision-gate/hooks/test_hooks.py
+   python3 plugins/autonomy-grant-gate/hooks/test_hooks.py
    ```
    `claude plugin validate` reads manifests; it does not run anything. Those hooks are
-   the only executable code this marketplace ships and they REFUSE tool calls, so a
-   regression there does not raise an error — the gate quietly stops guarding, in every
-   project that adopted the rule. Six of the cases hold that plugin's parser and the
-   `constitution` generator's template to one contract across a plugin boundary; they
-   SKIP, saying so and naming the paths they tried, when the sibling is not present.
-   **A skip is not a pass** — from a checkout of this repository both plugins are there
-   and the full count must run.
+   the only executable code this marketplace ships and they REFUSE tool calls and
+   turn-ends, so a regression there does not raise an error — the gate quietly stops
+   guarding, in every project that installed it. Six of the operator-decision cases hold
+   that plugin's parser and the `constitution` generator's template to one contract
+   across a plugin boundary; they SKIP, saying so and naming the paths they tried, when
+   the sibling is not present. **A skip is not a pass** — from a checkout of this
+   repository both plugins are there and the full count must run.
 6. After merge, each machine picks up the release via the **Update (end user)** steps
    above. A plugin update only triggers when the version was bumped.
 

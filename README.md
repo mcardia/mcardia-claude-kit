@@ -1,12 +1,14 @@
 # mcardia-claude-kit
 
-A personal **Claude Code marketplace** of design and architecture tooling. It ships three
+A personal **Claude Code marketplace** of design and architecture tooling. It ships four
 plugins:
 
 - **`sdd-generators`** — interview-style generators that bootstrap the governance and
   design documents of any **Spec-Driven Development (SDD)** project.
 - **`operator-decision-gate`** — applies and enforces a project's own rule about which
   decisions are the operator's, and refuses a handover that arrives without its record.
+- **`autonomy-grant-gate`** — refuses a turn that ends without declaring its own state,
+  while a continuous autonomy grant is active.
 - **`dependency-auditor`** — a read-only audit of a project's direct dependencies.
 
 The generators encode one core discipline — **one authority per fact**: every concrete
@@ -20,6 +22,7 @@ as it grows.
 /plugin marketplace add mcardia/mcardia-claude-kit
 /plugin install sdd-generators@mcardia-claude-kit
 /plugin install operator-decision-gate@mcardia-claude-kit
+/plugin install autonomy-grant-gate@mcardia-claude-kit
 /plugin install dependency-auditor@mcardia-claude-kit
 ```
 
@@ -100,6 +103,23 @@ skippable — decline it and this plugin stays inert, which is a supported answe
 than a gap. A section written by hand works identically. See
 [plugins/operator-decision-gate/USAGE.md](plugins/operator-decision-gate/USAGE.md).
 
+### autonomy-grant-gate
+
+No command, no agent, no skill: one `Stop` hook. A turn ends when the assistant stops
+calling tools, so under a continuous autonomy grant — the operator said "continue
+autonomously" and went away — naming the next step and stopping IS stopping. The hook
+refuses a turn that ends without one line saying `IN FLIGHT: <what will re-invoke me>` or
+`STOPPED: <queue empty | red gate | operator decision | question>`, and only while such a
+grant is active in the session's transcript.
+
+It checks the **form**, not whether stopping was right: three mechanical predicates were
+measured over 45 transcripts and 2,358 turn-ends, and none of them fired on the stops
+that actually cost time. Unlike the gate above it **ships a default vocabulary**, because
+a grant is a conversational act and no corpus section declares it — a deliberate
+departure, with an optional `.claude/autonomy-grant.json` override and a calibration
+script that self-checks before printing a project's own numbers. See
+[plugins/autonomy-grant-gate/USAGE.md](plugins/autonomy-grant-gate/USAGE.md).
+
 ### dependency-auditor
 
 ```sh
@@ -125,6 +145,7 @@ that teammates are prompted to install it when they trust the workspace:
   "enabledPlugins": {
     "sdd-generators@mcardia-claude-kit": true,
     "operator-decision-gate@mcardia-claude-kit": true,
+    "autonomy-grant-gate@mcardia-claude-kit": true,
     "dependency-auditor@mcardia-claude-kit": true
   }
 }
