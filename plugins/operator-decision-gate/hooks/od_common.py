@@ -112,7 +112,8 @@ GRADE_NA = re.compile(r"\b(?:grade|grau)\s*[:—–=-]\s*n/?a\b", re.IGNORECASE)
 _LABEL = r"(?:grade|grau)(?![\w-])"
 
 # A grade is STATED when its label heads a clause and the word follows it
-# closely: `Grade: major`, `| Grau | crítico |`, `**Grade:** minor`.
+# closely — `Grade: major`, `| Grau | crítico |`, `**Grade:** minor` — or when
+# the label is the subject of a copula: "the grade here is major".
 #
 # The anchor is NOT a claim about the form a grade must take. No constitution
 # this plugin has read says one, and quoting one as if it did is the drift
@@ -122,10 +123,33 @@ _LABEL = r"(?:grade|grau)(?![\w-])"
 # refuses the very turn that edits the rule it enforces. The reviewer
 # reproduced exactly that.
 #
-# `(?<![^\W\d_][ \t])` rejects a label preceded by a word — "the grade of the
-# regression is minor", "que diga grade major" — while leaving a label that
-# starts a line, a bullet, a table cell or a clause after `:`, `—`, `**`.
+# `(?<![^\W\d_][ \t])` rejects a label preceded by a word — "que diga grade
+# major", "says to grade the change with one word" — while leaving a label
+# that starts a line, a bullet, a table cell or a clause after `:`, `—`, `**`.
+#
+# `_COPULA` puts back the one shape that anchor throws away and that IS a
+# grade being stated: a sentence whose subject is the label. Without it "the
+# grade here is major" states a grade to every reader and to neither hook.
+# The two cheaper moves were measured and refused: dropping the anchor
+# catches the same shape and re-breaks the turn that explains the rule, and
+# widening the gap adds none of these shapes at all — it only reaches further
+# past a label that already heads a clause, and pulls a rule-quoting sentence
+# in while doing it.
+#
+# The cost is the reverse reading: "the grade of the regression is minor at
+# worst" is prose about a regression and now reads as a stated grade. That is
+# a judgement call rather than a free win, and the suite pins it as a refusal
+# so it stays visible instead of being discovered.
+#
+# NAMED NON-GOAL, so it is not mistaken for closed: a grade reached through a
+# verb rather than a copula — "I judge the grade of this change to be
+# critical" — is recognised by neither branch. Reaching it means admitting
+# arbitrary text between the label and the word, which is prose about grading
+# again, and the anchor exists to keep that out.
 _CLAUSE_START = r"(?<![^\W\d_][ \t])"
+# Up to three words of subject between the label and the copula — "the grade
+# OF THIS CHANGE is major" — lazily, so the nearest copula wins.
+_COPULA = r"(?:\s+\w+){0,3}?\s+(?:is|was|remains|é|fica)\s+"
 _GAP = 24
 
 GradeVocabulary = collections.namedtuple("GradeVocabulary", "words threshold")
@@ -210,8 +234,9 @@ def grade_stated(vocabulary):
             re.IGNORECASE)
     alternation = "|".join(re.escape(word) for word in vocabulary.words)
     return re.compile(
-        r"%s%s[^\n]{0,%d}?\b(?:%s)\b|%s"
-        % (_CLAUSE_START, _LABEL, _GAP, alternation, GRADE_NA.pattern),
+        r"(?:%s%s|%s%s)[^\n]{0,%d}?\b(?:%s)\b|%s"
+        % (_CLAUSE_START, _LABEL, _LABEL, _COPULA, _GAP, alternation,
+           GRADE_NA.pattern),
         re.IGNORECASE)
 
 
@@ -225,7 +250,8 @@ def stated_grades(text, vocabulary):
         return []
     alternation = "|".join(re.escape(word) for word in vocabulary.words)
     pattern = re.compile(
-        r"%s%s[^\n]{0,%d}?\b(%s)\b" % (_CLAUSE_START, _LABEL, _GAP, alternation),
+        r"(?:%s%s|%s%s)[^\n]{0,%d}?\b(%s)\b"
+        % (_CLAUSE_START, _LABEL, _LABEL, _COPULA, _GAP, alternation),
         re.IGNORECASE)
     return [match.group(1).lower() for match in pattern.finditer(text)]
 

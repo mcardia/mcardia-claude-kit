@@ -321,9 +321,22 @@ CASES_RECORD = [
     ("ALLOWED (compliant): a comment quoting the grade vocabulary", CONSTITUTION,
      "gh issue comment 12 --body 'The section says to grade the change with one "
      "word: `low`, `minor`, `moderate`, `major`, `critical`. Nothing is decided here.'", 0),
-    ("ALLOWED (compliant): a grade word used as prose", CONSTITUTION,
+    # This case was pinned ALLOWED and is now a refusal, deliberately. A
+    # copula puts the grade word on the label, so a sentence about a
+    # regression reads as a stated grade, enters the gate and fails on the
+    # anchors. That is the price of recognising "the grade here is major",
+    # which stated a grade to every reader and to neither hook; the case is
+    # kept, flipped, rather than deleted, so the price stays visible.
+    ("blocks prose a copula reads as a stated grade — the accepted cost",
+     CONSTITUTION,
      "gh issue comment 12 --body 'We upgraded CI. The grade of the regression "
-     "is minor at worst.'", 0),
+     "is minor at worst.'", 2),
+    ("blocks a grade stated through a copula (EN)", CONSTITUTION,
+     "gh issue comment 12 --body 'The grade here is major, and it stays "
+     "registered on this thread.'", 2),
+    ("blocks a grade stated through a copula (pt-BR)", CONSTITUTION,
+     "gh issue comment 12 --body 'O grade deste caso é major; segue "
+     "registrado.'", 2),
     ("ALLOWED (compliant): the operator's machine is not a decision", CONSTITUTION,
      "gh issue comment 12 --body \"Repro only on the operator's laptop, not in CI.\"", 0),
     ("ALLOWED (compliant): plain english 'does not work until'", CONSTITUTION,
@@ -343,6 +356,10 @@ CASES_FORM = [
      "That one is yours to decide — I have left it registered.", False, 2),
     ("blocks a grade above the line with no record", CONSTITUTION,
      "Corrigi o resto. O último fica: grade major, o handler do SPA shell.", False, 2),
+    # The same grade, stated through a copula rather than a label heading a
+    # clause. It is above the line either way, and the turn used to end.
+    ("blocks a copula grade above the line with no record", CONSTITUTION,
+     "Fechei a fase. O grade deste caso é major, e segue registrado.", False, 2),
     ("blocks a record missing the panel", CONSTITUTION,
      FULL_RECORD.replace(" — od-gate panel.", ".").replace("Grade: minor", "Grade: major"),
      False, 2),
