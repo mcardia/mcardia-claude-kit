@@ -1,3 +1,7 @@
 # Temporary read-only reference clone (upstream marketplace we studied)
 tmp-cloud-mkt-place/
 
+# Byte-code left behind when a hook script is imported or tested
+__pycache__/
+*.py[cod]
+
