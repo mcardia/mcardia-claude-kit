@@ -1,6 +1,6 @@
 ---
 name: od-lens
-description: Adversarial single-lens examiner for an operator decision. Defines the cause, remedy and ownership lenses, the synthesis role that writes the six-field record, and the critic role that reads a whole set of records at once. Used by /sdd-generators:od.
+description: Adversarial single-lens examiner for an operator decision. Defines the cause, remedy and ownership lenses, the synthesis role that writes the six-field record, and the critic role that reads a whole set of records at once. Used by /operator-decision-gate:od.
 effort: high
 color: orange
 ---

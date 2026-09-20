@@ -1,5 +1,5 @@
 ---
-description: "Interview that generates the SDD constitution (methodology.md + AGENTS.md): method pillars, source-of-truth hierarchy, artifact taxonomy, and — if the project wants one — the operator-decision section that /sdd-generators:od and its hooks read."
+description: "Interview that generates the SDD constitution (methodology.md + AGENTS.md): method pillars, source-of-truth hierarchy, artifact taxonomy, and — if the project wants one — the operator-decision section that the separate operator-decision-gate plugin reads."
 disable-model-invocation: true
 ---
 
@@ -123,11 +123,17 @@ Help the user assign, for every artifact type they adopt, what it owns and what 
    Open by asking whether the project reserves a class of decisions to one
    person — the operator, the owner, the tech lead — who must rule before work
    proceeds. **If it does not, skip the rest of this stage**, write no such
-   section, and say plainly what that means: `/sdd-generators:od` will have no
-   rule to apply, and its two hooks will refuse nothing in this project. That
-   is a valid answer, not a gap. Do not talk anyone into the discipline.
+   section, and say plainly what that means: nothing here enforced it anyway,
+   and the `operator-decision-gate` plugin — a separate install in this same
+   marketplace, which reads this section and never writes it — will have no
+   rule to apply and will refuse nothing in this project. That is a valid
+   answer, not a gap. Do not talk anyone into the discipline.
 
-   If it does, collect these, one question at a time:
+   If it does, say the other half plainly too — this stage writes the rule,
+   and a written rule binds whoever reads it, but what makes it *refuse* a
+   violation is that separate plugin, so a project that keeps the section
+   without installing it has the rule and no enforcement — and then collect
+   these, one question at a time:
 
    1. What makes a decision that person's rather than the session's.
    2. The gate: what must be verified before a decision is written as theirs,
@@ -474,8 +480,8 @@ Before generating the two files:
 - The one-authority-per-fact rule (`AGENTS.md` §3) has both a layering example and a duplication example.
 - The Definition of Done (`methodology.md` §5) is a closed, checkable list.
 - The anti-fabrication list (`AGENTS.md` §7) is present, even if short.
-- The operator-decision section (`AGENTS.md` §5) is present **only** if the stage collected answers, and absent without apology if it did not — in which case you said out loud that `/sdd-generators:od` and its hooks stay inert here.
-- If it is present, it is machine-readable as well as readable, because `/sdd-generators:od` and its two hooks parse it rather than carrying a copy of anybody's scale: the sentence that introduces the scale carries every grade word in backticks, in order, cheapest first, and carries no other backticked word; the sentence that draws the line names one of those same words, spelled the same way. Confirm it parsed, rather than assuming — `python3 "$CLAUDE_PLUGIN_ROOT/hooks/check-od-record.py" --explain .` prints the vocabulary and the threshold it read, or says the project is not gated at all.
+- The operator-decision section (`AGENTS.md` §5) is present **only** if the stage collected answers, and absent without apology if it did not — in which case you said out loud that the `operator-decision-gate` plugin stays inert here.
+- If it is present, it kept the machine-readable shape Output Template B gives it, whatever heading style and numbering you adapted it to: the scale sentence still carries the grade words in backticks, in the template's order and nothing else in backticks, and the line sentence still names one of those same words, spelled the same way. That shape is what the `operator-decision-gate` plugin parses, instead of carrying a copy of anybody's scale; the full contract is stated in that plugin, and where it is installed `python3 <its plugin root>/hooks/check-od-record.py --explain .` prints the vocabulary and threshold it read.
 - Neither file contains architectural decisions (those belong in ADRs) or product requirements (those belong in the PRD).
 - The two files cross-reference each other but never restate each other's content.
 - Both file bodies carry no dates, version numbers, or change log.

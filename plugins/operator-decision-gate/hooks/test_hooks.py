@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Behavioural tests for the two operator-decision hooks shipped by the plugin.
+"""Behavioural tests for the two operator-decision hooks this plugin ships.
 
 Run them:
 
-    python3 plugins/sdd-generators/hooks/test_hooks.py
+    python3 plugins/operator-decision-gate/hooks/test_hooks.py
 
 Each case runs the real hook as a subprocess with a real JSON payload on stdin,
 against a real temporary project tree, and asserts the exit code. Exit 2 blocks
@@ -16,6 +16,7 @@ satisfies the rule. `(hole)` means the gate cannot see the write at all — a
 documented limit of checking text without a shell, not a pass. A suite that
 spelled both the same way would read as if the gate were closed.
 """
+import glob
 import json
 import os
 import re
@@ -28,7 +29,59 @@ HOOKS = os.path.dirname(os.path.abspath(__file__))
 RECORD_HOOK = os.path.join(HOOKS, "check-od-record.py")
 FORM_HOOK = os.path.join(HOOKS, "check-od-form.py")
 PLUGIN = os.path.dirname(HOOKS)
-CONSTITUTION_SKILL = os.path.join(PLUGIN, "skills", "constitution", "SKILL.md")
+# The template case reads the `constitution` generator's Output Template B out
+# of the SIBLING plugin. This plugin carries no copy of it: the generator owns
+# the section and this one only ever parses it, and two authors for one fact is
+# the drift the kit exists to prevent.
+#
+# Where that sibling sits depends on which copy is running, and the two layouts
+# are NOT the same shape:
+#
+#   repository   <repo>/plugins/<plugin>/                  siblings side by side
+#   installed    <cache>/<marketplace>/<plugin>/<version>/ a version segment
+#                                                          under every plugin
+#
+# So one hop up and across finds it in the repository only; from an installed
+# copy it is two hops up and back down through a version directory whose name
+# this plugin cannot know. Both are tried, repository first. Where several
+# versions of the sibling are cached the NEWEST is read, because an update
+# leaves older directories behind and never newer ones. Where the sibling is
+# on neither path it is genuinely absent — this plugin installs alone — which
+# the case reports, with the paths it tried, rather than crashes on.
+_SKILL_TAIL = ("skills", "constitution", "SKILL.md")
+CONSTITUTION_PATTERNS = (
+    os.path.join(os.path.dirname(PLUGIN), "sdd-generators", *_SKILL_TAIL),
+    os.path.join(os.path.dirname(os.path.dirname(PLUGIN)), "sdd-generators",
+                 "*", *_SKILL_TAIL),
+)
+
+
+def _version_key(path):
+    """Sort a cached sibling by its version directory, numerically.
+
+    Sorting these as strings picks `3.0.0` over `10.0.0`, so the first
+    double-digit major would silently read a stale template and the contract
+    test would go green against the wrong side of it. The segments are
+    compared as integers where they are integers, and the raw name breaks
+    ties so a non-numeric directory still orders deterministically.
+    """
+    name = os.path.basename(os.path.dirname(os.path.dirname(
+        os.path.dirname(path))))
+    parts = tuple(int(p) if p.isdigit() else -1
+                  for p in re.split(r"[.+-]", name))
+    return (parts, name)
+
+
+def find_constitution_skill():
+    """The sibling's template, resolved across both layouts, or None."""
+    for pattern in CONSTITUTION_PATTERNS:
+        matches = glob.glob(pattern)
+        if matches:
+            return max(matches, key=_version_key)
+    return None
+
+
+CONSTITUTION_SKILL = find_constitution_skill()
 
 sys.path.insert(0, HOOKS)
 
@@ -80,9 +133,10 @@ A question the coordinating session cannot settle is an operator decision.
 """
 
 # Sample answers for every placeholder in the operator-decision block of the
-# `constitution` generator's Output Template B. The vocabulary is deliberately
-# nobody's default — least of all this estate's — because a template and a
-# parser that only agree on five familiar words agree on nothing.
+# Output Template B that the `constitution` generator in the `sdd-generators`
+# plugin emits — the one authority on that section. The vocabulary is
+# deliberately nobody's default — least of all this estate's — because a
+# template and a parser that only agree on five familiar words agree on nothing.
 TEMPLATE_ANSWERS = {
     "what makes a decision the operator's rather than the session's":
         "A decision is the operator's when it changes what the product "
@@ -619,19 +673,32 @@ def fill_template(template):
 
 
 def template_cases(suite):
-    """The generator must write a constitution its own hooks can read.
+    """The sibling generator must write a constitution these hooks can read.
 
-    A `constitution` run that emitted a section the gate cannot parse would
-    leave a project believing it is gated when it is not, and the failure
-    would be silent in both directions — nothing refused, nothing said. So
-    this fills the real template out of the real `SKILL.md` and puts the
-    result through `--explain` and through the record hook as subprocesses,
-    exactly as a project would.
+    A `/sdd-generators:constitution` run that emitted a section the gate
+    cannot parse would leave a project believing it is gated when it is not,
+    and the failure would be silent in both directions — nothing refused,
+    nothing said. So this fills the real template out of the real `SKILL.md`
+    and puts the result through `--explain` and through the record hook as
+    subprocesses, exactly as a project would.
+
+    It is the one case that reaches outside this plugin, and the only one that
+    cannot run when the sibling is not found on either of the two layouts it
+    can sit on. It says so, prints every path it tried, and returns; the count
+    drops by these cases and the rest of the suite still reports.
 
     `od_common` is imported here only to LOCATE the block — deliberately with
     the same predicate the hooks use to find a section, so a heading the gate
     would miss cannot be extracted and quietly tested anyway.
     """
+    if CONSTITUTION_SKILL is None:
+        print("SKIP  template/*: the `sdd-generators` plugin was not found "
+              "beside or near this one, so the template these hooks must "
+              "parse is not there to read. Tried:")
+        for pattern in CONSTITUTION_PATTERNS:
+            print(f"        {pattern}")
+        return
+
     with open(CONSTITUTION_SKILL, encoding="utf-8") as fh:
         skill = fh.read()
 

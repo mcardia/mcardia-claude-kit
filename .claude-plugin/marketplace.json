@@ -8,9 +8,15 @@
   "plugins": [
     {
       "name": "sdd-generators",
-      "description": "Interview-style generators for SDD governance and design documents (constitution, PRD, ADR, spec, C4, traceability, doclint, readiness-audit), plus the operator-decision gate and its enforcement hooks",
+      "description": "Interview-style generators for SDD governance and design documents (constitution, PRD, ADR, spec, C4, traceability, doclint, readiness-audit)",
       "source": "./plugins/sdd-generators",
-      "version": "2.1.0"
+      "version": "3.0.0"
+    },
+    {
+      "name": "operator-decision-gate",
+      "description": "Applies and enforces the project's own operator-decision rule: verification at source, a 4N+1 adversarial panel, a fixed record, and two hooks that refuse a handover without one. Inert in a project whose constitution has no operator-decision section — the section is authored by the constitution interview in sdd-generators",
+      "source": "./plugins/operator-decision-gate",
+      "version": "1.0.0"
     },
     {
       "name": "dependency-auditor",
