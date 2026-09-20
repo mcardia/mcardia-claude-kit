@@ -35,14 +35,23 @@ Find the constitution — `AGENTS.md`, `docs/AGENTS.md`, `CLAUDE.md`, or the met
 
 What the section must fix, for the rest of this cycle to mean anything: what counts as an operator decision; the gate; the grade words and the line above which the operator decides; the categories that are the operator's at every grade; the record's fields; and where a record lands.
 
+#### What the hooks' parser needs on top of that
+
+The seven items above are what the *rule* must settle. Two of them are also read by machine, so their spelling is this plugin's contract and is stated here because the parser is here:
+
+- **The sentence that introduces the grade scale** carries every grade word in backticks, in order, cheapest first, and carries no other backticked word.
+- **The sentence that draws the line** names one of those same words, spelled the same way.
+
+Where that parse fails the hooks do not guess: a grade label with any value satisfies them and the above-the-line test is skipped entirely — the project reads as gated and is barely gated. So confirm the parse rather than assuming it, with the command at the end of this step.
+
 #### Install the rule (first run only)
 
-If the project has no such section, this skill has nothing to apply. Say so plainly, improvise no rule, and do not hand the case over as though it were covered — there is no rule yet under which it could be. One interview authors the section: `/sdd-generators:constitution`, whose **operator-decisions stage** asks for every item above and whose `AGENTS.md` template renders them. Two ways in:
+If the project has no such section, this skill has nothing to apply. Say so plainly, improvise no rule, and do not hand the case over as though it were covered — there is no rule yet under which it could be. Two ways to get one:
 
-- **No constitution yet** — run `/sdd-generators:constitution` whole; the stage sits after the review process.
-- **A constitution that predates the stage** — run that stage alone, and add the section it produces to the existing constitution in that document's own heading style and numbering.
+- **An interview authors it** — `/sdd-generators:constitution`, in the `sdd-generators` plugin of this same marketplace, has an **operator-decisions stage** that asks for every item above and an `AGENTS.md` template that renders them in the shape the parser reads. It is a **separate install** (`/plugin install sdd-generators@mcardia-claude-kit`); this plugin never authors the section, because two authors for one fact is the drift the kit exists to prevent. With no constitution yet, run that command whole — the stage sits after the review process. With a constitution that predates the stage, run the stage alone and add what it produces to the existing document in that document's own heading style and numbering.
+- **Or it is written by hand** — the seven items above are what it must settle, and the two bullets above are how the two machine-read sentences must be spelled. Heading it `## Operator decisions` (numbered or not) is what the hooks look for.
 
-Author neither the questions nor the section here. Both belong to the `constitution` skill; a second copy in this file would diverge from the first the day either one changes.
+Author neither the interview's questions nor the section itself here. Both belong to the `constitution` skill, in the other plugin; a second copy in this file would diverge from the first the day either one changes.
 
 Declining is an answer. A project that does not want the discipline writes no section, and nothing below ever fires — not a gap, and not something to argue anyone out of. To see which it is:
 
@@ -58,7 +67,7 @@ An unverified recommendation is not presented. It is verified first, and if it c
 
 ### 2. Run the panel
 
-    Workflow({ name: "sdd-generators:od-gate", args: [ … ] })
+    Workflow({ name: "operator-decision-gate:od-gate", args: [ … ] })
 
 Three lenses per finding — cause, remedy, ownership — each briefed to refute, then a synthesiser, then one critic across the whole set. `4N + 1` agents, so pass few items and batch related ones into one run rather than several.
 

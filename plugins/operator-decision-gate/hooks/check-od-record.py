@@ -107,7 +107,8 @@ MESSAGE = (
     "is missing {reason}. The rule is in {constitution} — read its "
     "operator-decision section and write the record that section specifies, "
     "in full, in whichever direction this is: asking or reporting. Run "
-    "/sdd-generators:od to produce the record and run the panel in one call. "
+    "/operator-decision-gate:od to produce the record and run the panel in "
+    "one call. "
     "If the section leaves a change of this grade with the session rather than "
     "with the operator, execute it and make the record the receipt."
 )

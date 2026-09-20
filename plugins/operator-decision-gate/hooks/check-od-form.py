@@ -64,8 +64,9 @@ MESSAGE = (
     "the record. The rule is in {constitution} — read its operator-decision "
     "section and write the record that section specifies, as a block, in "
     "whichever direction this is: asking or reporting. A grade inside a "
-    "sentence is not it. Run /sdd-generators:od to produce the block with the "
-    "panel. If the section leaves a change of this grade with the session "
+    "sentence is not it. Run /operator-decision-gate:od to produce the block "
+    "with the panel. "
+    "If the section leaves a change of this grade with the session "
     "rather than with the operator, execute it and make the block the receipt."
 )
 

@@ -36,7 +36,7 @@
 export const meta = {
   name: 'od-gate',
   description: 'Run the operator-decision gate as an adversarial panel: three lenses per finding, a synthesiser, and one critic over the set',
-  whenToUse: 'Before any operator decision is written down — asked or reported. Invoked by /sdd-generators:od.',
+  whenToUse: 'Before any operator decision is written down — asked or reported. Invoked by /operator-decision-gate:od.',
   phases: [
     { title: 'Lenses', detail: 'cause, remedy and ownership, briefed to refute, per finding' },
     { title: 'Synthesis', detail: 'the record fields per finding, from the three lens reports' },
@@ -44,7 +44,7 @@ export const meta = {
   ],
 }
 
-const AGENT = 'sdd-generators:od-lens'
+const AGENT = 'operator-decision-gate:od-lens'
 
 const input = Array.isArray(args) ? { items: args } : (args || {})
 const items = (input.items || []).filter(Boolean)

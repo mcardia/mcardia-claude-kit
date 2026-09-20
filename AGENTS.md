@@ -1,9 +1,9 @@
 # AGENTS.md — mcardia-claude-kit
 
-This repository is a **Claude Code marketplace** (`mcardia-claude-kit`) shipping two
-plugins: `sdd-generators` and `dependency-auditor`. Everything an end user runs is
-delivered **through the plugin**. There is exactly one supported way to install and
-update it, described below.
+This repository is a **Claude Code marketplace** (`mcardia-claude-kit`) shipping three
+plugins: `sdd-generators`, `operator-decision-gate` and `dependency-auditor`. Everything
+an end user runs is delivered **through the plugin**. There is exactly one supported way
+to install and update it, described below.
 
 ## Golden rule: the plugin is the only delivery mechanism
 
@@ -23,6 +23,7 @@ In an interactive Claude Code session:
 ```sh
 /plugin marketplace add mcardia/mcardia-claude-kit
 /plugin install sdd-generators@mcardia-claude-kit
+/plugin install operator-decision-gate@mcardia-claude-kit
 /plugin install dependency-auditor@mcardia-claude-kit
 ```
 
@@ -31,20 +32,36 @@ Equivalent CLI form:
 ```sh
 claude plugin marketplace add mcardia/mcardia-claude-kit
 claude plugin install sdd-generators@mcardia-claude-kit
+claude plugin install operator-decision-gate@mcardia-claude-kit
 claude plugin install dependency-auditor@mcardia-claude-kit
 ```
 
-Installing once makes the commands (`/sdd-generators:*`, `/dependency-auditor:*`)
-available across **all** your projects. `sdd-generators` bundles its skills, its two
-registered agents (`docs-auditor`, `od-lens`), one saved workflow (`od-gate`) and two
-hooks; nothing installs separately.
+Each plugin installs on its own; take the ones you want. Installing one makes its
+commands (`/sdd-generators:*`, `/operator-decision-gate:*`, `/dependency-auditor:*`)
+available across **all** your projects, and each bundles everything it needs:
+`sdd-generators` its eight interview skills and the `docs-auditor` agent;
+`operator-decision-gate` its skill, the `od-lens` agent, the `od-gate` workflow and two
+hooks.
+
+The first two are independent installs with one deliberate seam. `operator-decision-gate`
+reads an operator-decision section out of the consuming project's constitution and never
+authors it; the interview that authors it is `/sdd-generators:constitution`. Install the
+gate alone and it stays inert until that section exists — written by hand, or by
+installing `sdd-generators` for the one interview stage that produces it.
 
 ## Update (end user)
 
 ```sh
-claude plugin marketplace update mcardia-claude-kit      # refresh the marketplace clone from GitHub
-claude plugin update sdd-generators@mcardia-claude-kit   # update the installed plugin to the new version
+claude plugin marketplace update mcardia-claude-kit              # refresh the marketplace clone from GitHub
+claude plugin update sdd-generators@mcardia-claude-kit           # then update each installed plugin, by name
+claude plugin update operator-decision-gate@mcardia-claude-kit
+claude plugin update dependency-auditor@mcardia-claude-kit
 ```
+
+Refreshing the marketplace updates nothing by itself, and `update` cannot install a
+plugin that was never installed — a plugin new to a machine is added with `install`,
+after the marketplace refresh. Each installed plugin is then updated by name, and only
+when its own version was bumped.
 
 `claude plugin update` prints **"Restart to apply changes."** **Restarting Claude Code
 is the reliable, version-independent way to apply the update** — a running session keeps
@@ -65,7 +82,7 @@ Verify with `/plugin` and `/agents`.
 Code and docs live only in this repo; changes reach users by publishing a new version.
 
 1. Make the change in the repo. Where a skill **ships an agent**, the agent file in
-   `plugins/sdd-generators/agents/` is the **single source of truth** for that
+   that plugin's own `agents/` directory is the **single source of truth** for that
    subagent's behavior: the `SKILL.md` references it by name and must not duplicate
    the agent prompt (no drift). A skill with no agent carries its own prompt in full —
    one authority either way, never two.
@@ -73,12 +90,18 @@ Code and docs live only in this repo; changes reach users by publishing a new ve
    independent review before merge defined in the operator's global rules; documentation
    does not.
 3. Bump the version in **both** files, which must agree:
-   - `plugins/sdd-generators/.claude-plugin/plugin.json` → `version`
-   - `.claude-plugin/marketplace.json` → the plugin's `version` entry
-   Use SemVer: patch for fixes, minor for new skills/agents, major for breaking changes.
-4. Validate before merging:
+   - `plugins/<plugin>/.claude-plugin/plugin.json` → `version`
+   - `.claude-plugin/marketplace.json` → that plugin's `version` entry
+   Bump only the plugins the change touches; a plugin whose files did not move keeps its
+   number, and the marketplace's own top-level `version` does not track plugin releases.
+   Use SemVer: patch for fixes, minor for new skills/agents, major for breaking changes
+   — and **removing a component from a released plugin is breaking**, whoever is believed
+   to have installed it.
+4. Validate before merging, once per plugin the change touches:
    ```sh
    claude plugin validate plugins/sdd-generators
+   claude plugin validate plugins/operator-decision-gate
+   claude plugin validate plugins/dependency-auditor
    ```
 5. After merge, each machine picks up the release via the **Update (end user)** steps
    above. A plugin update only triggers when the version was bumped.

@@ -1,10 +1,12 @@
 # mcardia-claude-kit
 
-A personal **Claude Code marketplace** of design and architecture tooling. It ships two
+A personal **Claude Code marketplace** of design and architecture tooling. It ships three
 plugins:
 
 - **`sdd-generators`** — interview-style generators that bootstrap the governance and
   design documents of any **Spec-Driven Development (SDD)** project.
+- **`operator-decision-gate`** — applies and enforces a project's own rule about which
+  decisions are the operator's, and refuses a handover that arrives without its record.
 - **`dependency-auditor`** — a read-only audit of a project's direct dependencies.
 
 The generators encode one core discipline — **one authority per fact**: every concrete
@@ -17,10 +19,12 @@ as it grows.
 ```sh
 /plugin marketplace add mcardia/mcardia-claude-kit
 /plugin install sdd-generators@mcardia-claude-kit
+/plugin install operator-decision-gate@mcardia-claude-kit
 /plugin install dependency-auditor@mcardia-claude-kit
 ```
 
-Installing once makes the commands available to you across **all** your projects.
+Each plugin installs on its own; take the ones you want. Installing one makes its
+commands available to you across **all** your projects.
 
 ## Commands
 
@@ -40,23 +44,9 @@ roughly in this order. See [plugins/sdd-generators/USAGE.md](plugins/sdd-generat
 | `/sdd-generators:traceability` | `docs/traceability.md` | requirement/criterion/target → owning spec/task |
 | `/sdd-generators:doclint` | `scripts/check-docs.sh` | project-tailored docs lint: dead references, stale markers, name drift, coverage |
 | `/sdd-generators:readiness-audit` | audit verdict + fix plan | multi-lens agent audit → cross-verified fix plan → fresh-eyes re-verification |
-| `/sdd-generators:od` | an operator-decision record | applies the project's **own** operator-decision rule: verify cause and remedy at source → adversarial panel → grade → execute it or hand it over, as one fixed record either way |
 
 Authority flows top-down: **ADRs > standards > reference docs > running system**. Specs
 derive from ADRs and never override them.
-
-`/sdd-generators:od` also ships a saved workflow (`od-gate`, the `4N + 1` adversarial
-panel) and two hooks that refuse a handover missing its record — on a tracker write, and
-at the end of a turn. Both hooks read the rule out of the consuming project's own
-constitution and refuse nothing in a project that has none.
-
-**A project adopts the discipline by having the section, and by nothing else.**
-`/sdd-generators:constitution` has an operator-decisions stage that writes it — what
-counts as one, the gate, the grade scale and the line, the categories reserved whatever
-the grade, the record's fields, and where a record lands. The stage is skippable: decline
-it and the skill, the workflow and both hooks stay inert, which is a supported answer
-rather than a gap. See
-[plugins/sdd-generators/USAGE.md](plugins/sdd-generators/USAGE.md).
 
 ### What `sdd-generators` deliberately does not do
 
@@ -73,10 +63,7 @@ were removed from the plugin because a built-in already does them — use the bu
 | Scope and run deep research | the built-in `deep-research` skill — it asks its own clarifying questions, fans out searches, adversarially verifies claims, and synthesizes a cited report | `research-briefing`, `research-document` |
 
 General task execution as orchestrated multi-agent work was removed too (`sdd-executor`):
-the **Workflow** tool covers it. `od-gate` is the one workflow that survives here, because
-it is not general execution — it is a fixed adversarial shape the operator-decision rule
-needs on every use, and re-authoring it per use is what makes the correct path the
-expensive one.
+the **Workflow** tool covers it, and this plugin registers no workflow of its own.
 
 Two further reductions were internal rather than delegated to a built-in: the
 `c4-diagram-generator` agent was folded into the `/sdd-generators:c4` skill, and the lens
@@ -85,11 +72,28 @@ one authority per fact, applied to the plugin itself.
 
 What remains is the part no built-in covers: the **SDD corpus discipline** — a
 constitution that fixes the source-of-truth hierarchy, the document generators that obey
-it, a traceability matrix, a generated docs lint, a multi-lens adversarial readiness
-audit, and the operator-decision gate that applies whatever rule that constitution
-states. TDD rules, review conventions and model assignments are *project* policy: they
+it, a traceability matrix, a generated docs lint, and a multi-lens adversarial readiness
+audit. TDD rules, review conventions and model assignments are *project* policy: they
 belong in the `AGENTS.md` / `methodology.md` that `/sdd-generators:constitution` writes,
 not in a cross-project plugin.
+
+### operator-decision-gate
+
+| Command | Produces | Role |
+|---|---|---|
+| `/operator-decision-gate:od` | an operator-decision record | applies the project's **own** operator-decision rule: verify cause and remedy at source → adversarial panel → grade → execute it or hand it over, as one fixed record either way |
+
+It also ships a saved workflow (`od-gate`, the `4N + 1` adversarial panel) and two hooks
+that refuse a handover missing its record — on a tracker write, and at the end of a turn.
+
+**A project adopts the discipline by having the section in its constitution, and by
+nothing else.** All three components read the rule out of that section and refuse nothing
+in a project that has none — no flag, no settings entry, no second file to drift. This
+plugin never authors the section: the interview that does is
+`/sdd-generators:constitution`, a separate install, whose operator-decisions stage is
+skippable — decline it and this plugin stays inert, which is a supported answer rather
+than a gap. A section written by hand works identically. See
+[plugins/operator-decision-gate/USAGE.md](plugins/operator-decision-gate/USAGE.md).
 
 ### dependency-auditor
 
@@ -115,6 +119,7 @@ that teammates are prompted to install it when they trust the workspace:
   },
   "enabledPlugins": {
     "sdd-generators@mcardia-claude-kit": true,
+    "operator-decision-gate@mcardia-claude-kit": true,
     "dependency-auditor@mcardia-claude-kit": true
   }
 }
@@ -128,7 +133,7 @@ that teammates are prompted to install it when they trust the workspace:
 | User | `~/.claude/` | all of your projects, your machine only |
 | Plugin / marketplace | this kit, once installed | global for you, versioned, namespaced, shareable |
 
-Paste-the-prompt still works: open a generator's `plugins/sdd-generators/skills/<name>/SKILL.md`,
+Paste-the-prompt still works: open a skill's `plugins/<plugin>/skills/<name>/SKILL.md`,
 skip the YAML frontmatter, and paste the body into any AI tool.
 
 ## Credits

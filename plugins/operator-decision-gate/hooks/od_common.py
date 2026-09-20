@@ -45,8 +45,9 @@ CONSTITUTION_NAMES = (
 )
 
 # The section heading that declares the discipline, and the whole of the opt-in.
-# Tolerant of numbering, of the two spellings the kit's `constitution` generator
-# can emit, and of the few near-synonyms a project is likely to reach for.
+# Tolerant of numbering, of the two spellings the `constitution` generator in
+# the kit's `sdd-generators` plugin can emit, and of the few near-synonyms a
+# project is likely to reach for.
 # Deliberately not wider than that: a heading set loose enough to catch every
 # phrasing would switch the gate on in projects that never adopted the rule,
 # which is the failure this predicate exists to avoid. A project whose heading

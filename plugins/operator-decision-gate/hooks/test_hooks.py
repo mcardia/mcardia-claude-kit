@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Behavioural tests for the two operator-decision hooks shipped by the plugin.
+"""Behavioural tests for the two operator-decision hooks this plugin ships.
 
 Run them:
 
-    python3 plugins/sdd-generators/hooks/test_hooks.py
+    python3 plugins/operator-decision-gate/hooks/test_hooks.py
 
 Each case runs the real hook as a subprocess with a real JSON payload on stdin,
 against a real temporary project tree, and asserts the exit code. Exit 2 blocks
@@ -28,7 +28,15 @@ HOOKS = os.path.dirname(os.path.abspath(__file__))
 RECORD_HOOK = os.path.join(HOOKS, "check-od-record.py")
 FORM_HOOK = os.path.join(HOOKS, "check-od-form.py")
 PLUGIN = os.path.dirname(HOOKS)
-CONSTITUTION_SKILL = os.path.join(PLUGIN, "skills", "constitution", "SKILL.md")
+# The template case reads the `constitution` generator's Output Template B out
+# of the SIBLING plugin. This plugin carries no copy of it: the generator owns
+# the section and this one only ever parses it, and two authors for one fact is
+# the drift the kit exists to prevent. The sibling sits beside this plugin both
+# in the repository and in an installed marketplace, so one hop up and across
+# finds it; where only this plugin is installed it is absent, which the case
+# reports rather than crashes on.
+CONSTITUTION_SKILL = os.path.join(os.path.dirname(PLUGIN), "sdd-generators",
+                                  "skills", "constitution", "SKILL.md")
 
 sys.path.insert(0, HOOKS)
 
@@ -80,9 +88,10 @@ A question the coordinating session cannot settle is an operator decision.
 """
 
 # Sample answers for every placeholder in the operator-decision block of the
-# `constitution` generator's Output Template B. The vocabulary is deliberately
-# nobody's default — least of all this estate's — because a template and a
-# parser that only agree on five familiar words agree on nothing.
+# Output Template B that the `constitution` generator in the `sdd-generators`
+# plugin emits — the one authority on that section. The vocabulary is
+# deliberately nobody's default — least of all this estate's — because a
+# template and a parser that only agree on five familiar words agree on nothing.
 TEMPLATE_ANSWERS = {
     "what makes a decision the operator's rather than the session's":
         "A decision is the operator's when it changes what the product "
@@ -619,19 +628,30 @@ def fill_template(template):
 
 
 def template_cases(suite):
-    """The generator must write a constitution its own hooks can read.
+    """The sibling generator must write a constitution these hooks can read.
 
-    A `constitution` run that emitted a section the gate cannot parse would
-    leave a project believing it is gated when it is not, and the failure
-    would be silent in both directions — nothing refused, nothing said. So
-    this fills the real template out of the real `SKILL.md` and puts the
-    result through `--explain` and through the record hook as subprocesses,
-    exactly as a project would.
+    A `/sdd-generators:constitution` run that emitted a section the gate
+    cannot parse would leave a project believing it is gated when it is not,
+    and the failure would be silent in both directions — nothing refused,
+    nothing said. So this fills the real template out of the real `SKILL.md`
+    and puts the result through `--explain` and through the record hook as
+    subprocesses, exactly as a project would.
+
+    It is the one case that reaches outside this plugin, and the only one that
+    cannot run when `sdd-generators` is not installed beside it. It says so and
+    returns; the count drops by these cases and the rest of the suite still
+    reports.
 
     `od_common` is imported here only to LOCATE the block — deliberately with
     the same predicate the hooks use to find a section, so a heading the gate
     would miss cannot be extracted and quietly tested anyway.
     """
+    if not os.path.exists(CONSTITUTION_SKILL):
+        print("SKIP  template/*: the `sdd-generators` plugin is not installed "
+              "beside this one, so the template these hooks must parse "
+              f"({CONSTITUTION_SKILL}) is not there to read.")
+        return
+
     with open(CONSTITUTION_SKILL, encoding="utf-8") as fh:
         skill = fh.read()
 
