@@ -112,11 +112,15 @@ GRADE_NA = re.compile(r"\b(?:grade|grau)\s*[:—–=-]\s*n/?a\b", re.IGNORECASE)
 _LABEL = r"(?:grade|grau)(?![\w-])"
 
 # A grade is STATED when its label heads a clause and the word follows it
-# closely: `Grade: major`, `| Grau | crítico |`, `**Grade:** minor`. A grade
-# inside a sentence is not a record — which is the rule's own wording — and it
-# is also how a turn that EXPLAINS the rule reads: "then grade the change with
-# one word: `low`, `minor`, …". Without this, the gate blocks the very turn
-# that edits the rule it enforces, and the reviewer reproduced exactly that.
+# closely: `Grade: major`, `| Grau | crítico |`, `**Grade:** minor`.
+#
+# The anchor is NOT a claim about the form a grade must take. No constitution
+# this plugin has read says one, and quoting one as if it did is the drift
+# this file exists to prevent. What the anchor does is keep a turn that
+# EXPLAINS the rule from blocking itself: explaining it reads "then grade the
+# change with one word: `low`, `minor`, …", and without the anchor the gate
+# refuses the very turn that edits the rule it enforces. The reviewer
+# reproduced exactly that.
 #
 # `(?<![^\W\d_][ \t])` rejects a label preceded by a word — "the grade of the
 # regression is minor", "que diga grade major" — while leaving a label that
@@ -314,14 +318,18 @@ def find_constitution(cwd):
     on the machine including those that never adopted the rule. When `$HOME`
     is unset, or the working directory is outside it, the walk runs to `/` as
     before — refusing to look at all would be a silent no-op.
+
+    A working directory that no longer exists is NOT a reason to stop. Its
+    ancestors still do, and the session keeps running in it — a branch checkout
+    or a deleted scratch directory is enough to produce one. Returning None
+    there switched the whole gate off for the rest of the session, silently;
+    the `open()` calls below already fail closed on a path that is not there.
     """
     if not cwd:
         return None
     try:
         current = os.path.realpath(cwd)
     except OSError:
-        return None
-    if not os.path.isdir(current):
         return None
     home = _home()
     if home is not None and not (current == home

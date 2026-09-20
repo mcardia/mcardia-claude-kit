@@ -277,15 +277,22 @@ REPO_FLAG = re.compile(r"(?:--repo|(?<![\w-])-R)[= ]\s*['\"]?([^\s'\"]+)")
 
 
 def in_scope(command, project_root):
-    """False when an explicit repository flag names a repository outside this
-    project.
+    """False when an explicit repository flag names a repository belonging to
+    somebody else.
 
-    A command naming another organisation's repository is out of the rule even
-    when it runs from inside the project tree. Both spellings count: `-R` is
-    the one a session reaches for, and reading only `--repo` left every `-R`
-    write gated as if it were local. When the remotes cannot be read the answer
-    is yes: a gate that fails open on an unreadable config would be switched
-    off by a shallow clone.
+    The line is the OWNER, not the resolved project. A command naming another
+    organisation's repository is out of the rule even when it runs from inside
+    the project tree; a sibling repository of the same owner is not, and
+    reading the resolved project's remotes alone made it look that way. The
+    case is ordinary: in a tree of submodules the constitution resolves to the
+    nearest one, so from inside `docs/` the only remote in view is `docs`, and
+    every write naming `core` read as another organisation's business and was
+    let through ungated.
+
+    Both flag spellings count: `-R` is the one a session reaches for, and
+    reading only `--repo` left every `-R` write gated as if it were local. When
+    the remotes cannot be read the answer is yes: a gate that fails open on an
+    unreadable config would be switched off by a shallow clone.
     """
     match = REPO_FLAG.search(command)
     if not match:
@@ -294,8 +301,11 @@ def in_scope(command, project_root):
     if not slugs:
         return True
     named = match.group(1).lower()
-    return any(named == slug or named.endswith("/" + slug.split("/")[-1])
-               for slug in slugs)
+    if any(named == slug or named.endswith("/" + slug.split("/")[-1])
+           for slug in slugs):
+        return True
+    owners = {slug.split("/")[0] for slug in slugs}
+    return "/" in named and named.split("/")[0] in owners
 
 
 def failing_reason(command, cwd):
