@@ -267,7 +267,11 @@ if (contested.length) {
       { label: `judge:${prev.record.key}`, phase: 'Judge', agentType: AGENT, schema: JUDGEMENT },
     ).then(judgement => ({ record: prev.record, judgement })) : null,
   )
-  for (const entry of judged.filter(Boolean)) judgements.set(entry.record, entry.judgement)
+  // By position: `pipeline` returns one result per item, in item order, so
+  // this does not depend on the runtime handing a stage the same object.
+  contested.forEach((record, index) => {
+    if (judged[index]) judgements.set(record, judged[index].judgement)
+  })
 }
 
 const routed = records.map(record => ({
