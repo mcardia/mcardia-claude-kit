@@ -69,7 +69,7 @@ An unverified recommendation is not presented. It is verified first, and if it c
 
     Workflow({ name: "operator-decision-gate:od-gate", args: [ … ] })
 
-Three lenses per finding — cause, remedy, ownership — each briefed to refute, then a synthesiser, then one critic across the whole set. `4N + 1` agents, so pass few items and batch related ones into one run rather than several.
+Three lenses per finding — cause, remedy, ownership — each briefed to refute, then a synthesiser, then one critic across the whole set. A record graded above the constitution's line that touches no reserved category then gets a refuter and a judge, and comes back with the judge's `confidence`. `4N + 1 + 2M` agents, M being those records, so pass few items and batch related ones into one run rather than several.
 
 Each item is either an issue number or `{ key, title, brief }` with the finding stated in full. When the corpus or the code lives outside the working directory, pass `{ items, corpus, code }` instead of a bare array.
 
@@ -85,6 +85,8 @@ Grade the change in the constitution's own word, weighing it the way that sectio
 - **The section leaves it with the operator** — present the record and stop.
 
 Which of the two holds is the `od-lens` **ownership** lens's question, and that lens is defined in the agent file. Take its answer as evidence and settle it at the constitution yourself.
+
+Each record comes back with a `route` — `session` or `operator` — and that is the panel's reading of the line, not a third outcome. Above the line it reads `session` only when three things hold together: the judge's confidence is `high` or `very-high`, no reserved category applies, and the judge quoted the sentence in the constitution that admits a judged lane. A constitution without that sentence keeps every decision above its line with the operator, and the judgement travels with the record as evidence. A record executed on the judged lane says so in its grade field — the grade, the confidence, and the sentence that admitted it — because a receipt above the line that does not show why the session held it reads as the session overreaching.
 
 ### 4. Write the record where the work it governs lands
 
