@@ -29,7 +29,26 @@
  * Where any of them differs from the agent or from the project constitution,
  * those win and the synthesiser is told to say so.
  *
- * Agent count is 4N + 1. Pass few items.
+ * The judged lane. A record whose grade sits ABOVE the constitution's line,
+ * and which touches none of the categories the constitution reserves to the
+ * operator at every grade, gets one more round: a refuter that attacks the
+ * recommendation at source, then a judge that reads the record, the critic
+ * and the refutation and states its confidence in the recommendation on the
+ * scale the `od-lens` agent defines. The route follows from that:
+ *
+ *   - at or below the line, no reserved category  -> session
+ *   - a reserved category, at any grade            -> operator, no extra round
+ *   - above the line, no reserved category         -> session only when the
+ *     judge's confidence is `high` or above AND the judge quotes the
+ *     constitution sentence that admits a judged lane; operator otherwise
+ *
+ * The admission clause is why this lane is safe to ship to every project: the
+ * plugin never moves a decision the constitution gives the operator. A
+ * project whose operator-decision section does not admit a judged lane gets
+ * the extra round as evidence and the same route it had before.
+ *
+ * Agent count is 4N + 1 + 2M, M being the records sent to the judged lane.
+ * Pass few items.
  *
  * args — either an array of items, or { items, corpus, code, repo }:
  *   corpus  optional path to the design corpus, when it is not the working
@@ -41,12 +60,14 @@
  */
 export const meta = {
   name: 'od-gate',
-  description: 'Run the operator-decision gate as an adversarial panel: three lenses per finding, a synthesiser, and one critic over the set',
+  description: 'Run the operator-decision gate as an adversarial panel: three lenses per finding, a synthesiser, one critic over the set, and a refuter and a judge for each record above the line',
   whenToUse: 'Before any operator decision is written down — asked or reported. Invoked by /operator-decision-gate:od.',
   phases: [
     { title: 'Lenses', detail: 'cause, remedy and ownership, briefed to refute, per finding' },
     { title: 'Synthesis', detail: 'the record fields per finding, from the three lens reports' },
     { title: 'Critic', detail: 'one pass over every record: categories, grades, performability, interactions' },
+    { title: 'Refute', detail: 'above-the-line records only: one refuter attacks the recommendation at source' },
+    { title: 'Judge', detail: 'above-the-line records only: confidence on a fixed scale, and the route it yields' },
   ],
 }
 
@@ -85,6 +106,7 @@ const RECORD = {
     recommendation: { type: 'string', description: 'Field 4 — if CHANGE, exactly what changes: files, functions, contract rows. Executable as written by a fresh agent.' },
     cheapest_tier: { type: 'string', description: 'Every rung of the sizing ladder enumerated, and which one the remedy sits at. The ladder is the constitution\'s where it states a sizing policy, otherwise the plugin\'s four — say which was used.' },
     grade: { type: 'string', description: 'One word, taken from the grade vocabulary the project constitution states in its operator-decision section. Use that section\'s words exactly; do not substitute a scale from anywhere else.' },
+    above_line: { type: 'boolean', description: 'True when the constitution\'s operator-decision section puts this grade above the line it draws — the side where the operator decides.' },
     operator_axis: { type: 'string', description: 'The operator-only category this touches, named as the constitution names it, or `none`.' },
     operator_axis_quote: { type: 'string', description: 'If a category is claimed, the corpus sentence that makes it one, quoted with file and line, plus the strongest argument against. If none, name the live candidate and why it fails.' },
     where_verified: { type: 'string', description: 'Field 6 — file:line anchors and commands, for BOTH cause and remedy.' },
@@ -94,8 +116,47 @@ const RECORD = {
   },
   required: ['key', 'one_line', 'cause_verdict', 'decision', 'how_things_stand', 'why',
              'recommendation_verb', 'recommendation', 'cheapest_tier', 'grade',
-             'operator_axis', 'operator_axis_quote', 'where_verified', 'claims_refuted',
+             'above_line', 'operator_axis', 'operator_axis_quote', 'where_verified', 'claims_refuted',
              'files_changed_estimate', 'blocks_or_blocked_by'],
+}
+
+/*
+ * The judge's verdict. The scale's words are defined in the `od-lens` agent
+ * under the judge role; this enum only fixes their spelling and order, so the
+ * route below can compare them.
+ */
+const CONFIDENCE = ['low', 'medium', 'high', 'very-high']
+const JUDGEMENT = {
+  type: 'object',
+  properties: {
+    confidence: { type: 'string', enum: CONFIDENCE },
+    justification: { type: 'string', description: 'Why this level and not the next one up: each refuter objection, and whether it stands at source, with anchors.' },
+    standing_objections: { type: 'array', items: { type: 'string' }, description: 'Refuter objections that hold at source. Empty if none.' },
+    operator_axis_holds: { type: 'boolean', description: 'True when the record\'s `none` for the reserved categories survives the refutation.' },
+    lane_admitted: { type: 'boolean', description: 'True only when the constitution\'s operator-decision section admits a judged lane above its line.' },
+    lane_quote: { type: 'string', description: 'The sentence that admits it, quoted with file and line; or the sentence that keeps every above-the-line decision with the operator.' },
+  },
+  required: ['confidence', 'justification', 'standing_objections',
+             'operator_axis_holds', 'lane_admitted', 'lane_quote'],
+}
+const SESSION_FLOOR = CONFIDENCE.indexOf('high')
+
+/*
+ * Every test below fails toward the operator: a value that is not exactly the
+ * one that releases the session — a missing field, a string where a boolean
+ * belongs, a backticked `none` — routes `operator`, except that the backticks
+ * the schema's own wording invites are stripped before comparing.
+ */
+const reserved = (record) =>
+  String(record.operator_axis || '').replace(/`/g, '').trim().toLowerCase() !== 'none'
+
+function route(record, judgement) {
+  if (reserved(record)) return 'operator'
+  if (record.above_line === false) return 'session'
+  if (record.above_line !== true || !judgement) return 'operator'
+  const confident = CONFIDENCE.indexOf(judgement.confidence) >= SESSION_FLOOR
+  return confident && judgement.operator_axis_holds === true && judgement.lane_admitted === true
+    ? 'session' : 'operator'
 }
 
 function describe(item) {
@@ -127,7 +188,7 @@ function describe(item) {
   }
 }
 
-log(`od-gate: ${items.length} finding(s), ${items.length * 4 + 1} agents`)
+log(`od-gate: ${items.length} finding(s), ${items.length * 4 + 1} agents before the judged lane`)
 
 phase('Lenses')
 
@@ -172,4 +233,51 @@ const critique = await agent(
   { label: 'critic', phase: 'Critic', agentType: AGENT },
 )
 
-return { records, critique }
+const contested = records.filter(record => record.above_line === true && !reserved(record))
+log(`od-gate: ${contested.length} record(s) above the line with no reserved category, `
+    + `${contested.length * 2} more agents`)
+
+/*
+ * Keyed by the record object, never by its `key`: that string is the
+ * synthesiser's, two items can share it, and a shared key would hand one
+ * record another's judgement.
+ */
+const judgements = new Map()
+if (contested.length) {
+  phase('Refute')
+  const judged = await pipeline(
+    contested,
+
+    (record) => agent(
+      `${ROOTS}\n\n# Task — refute the recommendation for ${record.key}\n\n`
+      + `Your lens is **refute**. Apply it as your agent definition states it.\n\n`
+      + `## The record\n\n\`\`\`json\n${JSON.stringify(record, null, 2)}\n\`\`\`\n\n`
+      + `## The critic over the whole set\n\n${critique || '(the critic returned nothing)'}\n\n`
+      + `Return your report as your final message. That text IS the deliverable.`,
+      { label: `refute:${record.key}`, phase: 'Refute', agentType: AGENT },
+    ).then(refutation => ({ record, refutation })),
+
+    (prev) => prev.refutation ? agent(
+      `${ROOTS}\n\n# Task — judge the recommendation for ${prev.record.key}\n\n`
+      + `Your lens is **judge**. Apply it as your agent definition states it, and `
+      + `emit the verdict through the structured output attached to this call.\n\n`
+      + `## The record\n\n\`\`\`json\n${JSON.stringify(prev.record, null, 2)}\n\`\`\`\n\n`
+      + `## The critic over the whole set\n\n${critique || '(the critic returned nothing)'}\n\n`
+      + `## The refutation\n\n${prev.refutation}`,
+      { label: `judge:${prev.record.key}`, phase: 'Judge', agentType: AGENT, schema: JUDGEMENT },
+    ).then(judgement => ({ record: prev.record, judgement })) : null,
+  )
+  // By position: `pipeline` returns one result per item, in item order, so
+  // this does not depend on the runtime handing a stage the same object.
+  contested.forEach((record, index) => {
+    if (judged[index]) judgements.set(record, judged[index].judgement)
+  })
+}
+
+const routed = records.map(record => ({
+  ...record,
+  judgement: judgements.get(record) || null,
+  route: route(record, judgements.get(record)),
+}))
+
+return { records: routed, critique }

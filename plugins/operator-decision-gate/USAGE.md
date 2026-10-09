@@ -46,8 +46,8 @@ section is the interview, not the enforcement.
 ## Registered agent
 
 - **`od-lens`** — the adversarial examiner behind the command: the cause, remedy and
-  ownership lenses, the synthesis role that writes the record, and the critic role that
-  reads a whole set of records at once. It is the authority on what its own lenses mean;
+  ownership lenses, the synthesis role that writes the record, the critic role that
+  reads a whole set of records at once, and the refute and judge roles of the judged lane. It is the authority on what its own lenses mean;
   the skill and the workflow name a lens and never restate it, so there is one definition
   to keep true. It pins its effort in its definition and does not pin a model, because
   what a fleet of agents costs is the operator's call, not the plugin's.
@@ -55,7 +55,12 @@ section is the interview, not the enforcement.
 ## Registered workflow
 
 **`od-gate`** runs the operator-decision panel: three lenses per finding, a synthesiser,
-then one critic across the set — `4N + 1` agents. It is saved as a workflow rather than
+then one critic across the set — `4N + 1` agents. A record graded above the
+constitution's line that touches no reserved category then gets a refuter and a judge —
+two more agents each — and every record comes back with a `route`, `session` or
+`operator`. Above the line the route is `session` only on a judge's confidence of `high`
+or above, and only where the constitution itself admits that lane in a sentence the judge
+quotes; without that sentence the route stays `operator`. It is saved as a workflow rather than
 re-authored per use because the cheapest path has to be the correct one, or it loses to
 the shortcut. `/operator-decision-gate:od` invokes it as
 `Workflow({ name: "operator-decision-gate:od-gate", args: [ … ] })`; you can also run it

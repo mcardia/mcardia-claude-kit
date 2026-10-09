@@ -91,7 +91,7 @@ not in a cross-project plugin.
 |---|---|---|
 | `/operator-decision-gate:od` | an operator-decision record | applies the project's **own** operator-decision rule: verify cause and remedy at source → adversarial panel → grade → execute it or hand it over, as one fixed record either way |
 
-It also ships a saved workflow (`od-gate`, the `4N + 1` adversarial panel) and two hooks
+It also ships a saved workflow (`od-gate`, the `4N + 1` adversarial panel, plus a refuter and a judge for each record above the line) and two hooks
 that refuse a handover missing its record — on a tracker write, and at the end of a turn.
 
 **A project adopts the discipline by having the section in its constitution, and by
