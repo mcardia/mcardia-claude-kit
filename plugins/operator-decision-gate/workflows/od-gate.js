@@ -60,7 +60,7 @@
  */
 export const meta = {
   name: 'od-gate',
-  description: 'Run the operator-decision gate as an adversarial panel: three lenses per finding, a synthesiser, and one critic over the set',
+  description: 'Run the operator-decision gate as an adversarial panel: three lenses per finding, a synthesiser, one critic over the set, and a refuter and a judge for each record above the line',
   whenToUse: 'Before any operator decision is written down — asked or reported. Invoked by /operator-decision-gate:od.',
   phases: [
     { title: 'Lenses', detail: 'cause, remedy and ownership, briefed to refute, per finding' },
@@ -141,14 +141,21 @@ const JUDGEMENT = {
 }
 const SESSION_FLOOR = CONFIDENCE.indexOf('high')
 
-const reserved = (record) => String(record.operator_axis || '').trim().toLowerCase() !== 'none'
+/*
+ * Every test below fails toward the operator: a value that is not exactly the
+ * one that releases the session — a missing field, a string where a boolean
+ * belongs, a backticked `none` — routes `operator`, except that the backticks
+ * the schema's own wording invites are stripped before comparing.
+ */
+const reserved = (record) =>
+  String(record.operator_axis || '').replace(/`/g, '').trim().toLowerCase() !== 'none'
 
 function route(record, judgement) {
   if (reserved(record)) return 'operator'
-  if (!record.above_line) return 'session'
-  if (!judgement) return 'operator'
+  if (record.above_line === false) return 'session'
+  if (record.above_line !== true || !judgement) return 'operator'
   const confident = CONFIDENCE.indexOf(judgement.confidence) >= SESSION_FLOOR
-  return confident && judgement.operator_axis_holds && judgement.lane_admitted
+  return confident && judgement.operator_axis_holds === true && judgement.lane_admitted === true
     ? 'session' : 'operator'
 }
 
@@ -226,11 +233,16 @@ const critique = await agent(
   { label: 'critic', phase: 'Critic', agentType: AGENT },
 )
 
-const contested = records.filter(record => record.above_line && !reserved(record))
+const contested = records.filter(record => record.above_line === true && !reserved(record))
 log(`od-gate: ${contested.length} record(s) above the line with no reserved category, `
     + `${contested.length * 2} more agents`)
 
-const judgements = {}
+/*
+ * Keyed by the record object, never by its `key`: that string is the
+ * synthesiser's, two items can share it, and a shared key would hand one
+ * record another's judgement.
+ */
+const judgements = new Map()
 if (contested.length) {
   phase('Refute')
   const judged = await pipeline(
@@ -253,15 +265,15 @@ if (contested.length) {
       + `## The critic over the whole set\n\n${critique || '(the critic returned nothing)'}\n\n`
       + `## The refutation\n\n${prev.refutation}`,
       { label: `judge:${prev.record.key}`, phase: 'Judge', agentType: AGENT, schema: JUDGEMENT },
-    ).then(judgement => ({ key: prev.record.key, judgement })) : null,
+    ).then(judgement => ({ record: prev.record, judgement })) : null,
   )
-  for (const entry of judged.filter(Boolean)) judgements[entry.key] = entry.judgement
+  for (const entry of judged.filter(Boolean)) judgements.set(entry.record, entry.judgement)
 }
 
 const routed = records.map(record => ({
   ...record,
-  judgement: judgements[record.key] || null,
-  route: route(record, judgements[record.key]),
+  judgement: judgements.get(record) || null,
+  route: route(record, judgements.get(record)),
 }))
 
 return { records: routed, critique }
