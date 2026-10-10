@@ -16,7 +16,7 @@
       "name": "operator-decision-gate",
       "description": "Applies and enforces the project's own operator-decision rule: verification at source, a 4N+1 adversarial panel with a refuter and a judge for what sits above the line, a fixed record, and two hooks that refuse a handover without one. Inert in a project whose constitution has no operator-decision section \u2014 the section is authored by the constitution interview in sdd-generators",
       "source": "./plugins/operator-decision-gate",
-      "version": "1.1.1"
+      "version": "1.1.2"
     },
     {
       "name": "autonomy-grant-gate",
