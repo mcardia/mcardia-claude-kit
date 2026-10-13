@@ -168,10 +168,14 @@ const JUDGEMENT = {
 const SESSION_FLOOR = CONFIDENCE.indexOf('high')
 
 /*
- * Every test below fails toward the operator: a value that is not exactly the
- * one that releases the session — a missing field, a string where a boolean
- * belongs, a backticked `none` — routes `operator`, except that the backticks
- * the schema's own wording invites are stripped before comparing.
+ * Every test below fails toward the operator. Unjudged, only an `operator_axis`
+ * reading exactly `none` (the backticks the schema's own wording invites are
+ * stripped) at or below the line reaches the session; any other spelling, or
+ * a missing field, is treated as a claim and judged. Judged, the only values
+ * that release the session are the judge's own: `reserved_category_applies`
+ * exactly `false`, a confidence of `high` or above, and above the line
+ * `lane_admitted` exactly `true` — a string where a boolean belongs, a
+ * missing field or an unknown word routes `operator`.
  */
 const reserved = (record) =>
   String(record.operator_axis || '').replace(/`/g, '').trim().toLowerCase() !== 'none'
