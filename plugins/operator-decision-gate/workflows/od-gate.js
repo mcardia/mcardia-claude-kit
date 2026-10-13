@@ -34,17 +34,28 @@
  * the categories the constitution reserves to the operator at every grade. A
  * refuter attacks it at source — the category claim first, where there is
  * one, then the recommendation — and a judge reads the record, the critic and
- * the refutation, rules whether the category claim holds, and states its
- * confidence in the recommendation on the scale the `od-lens` agent defines.
- * The route follows from that:
+ * the refutation, rules whether ANY reserved category applies to the record —
+ * the one it claims or another — and states its confidence in the
+ * recommendation on the scale the `od-lens` agent defines. The route follows
+ * from that:
  *
- *   - at or below the line, no category claimed      -> session
- *   - a category claimed that the judge upholds      -> operator, any grade
- *   - a category claimed that the judge finds false  -> routed as if none was
- *     claimed: session at or below the line, the judged lane above it
- *   - above the line, no category (or a fallen one)  -> session only when the
- *     judge's confidence is `high` or above AND the judge quotes the
+ *   - at or below the line, no category claimed, not judged  -> session
+ *   - judged, and the judge does not rule `reserved_category_applies: false`
+ *                                                           -> operator
+ *   - judged, no reserved category applies, at or below the line
+ *                                                           -> session only
+ *     when the judge's confidence is `high` or above; operator otherwise
+ *   - judged, no reserved category applies, above the line  -> session only
+ *     when the judge's confidence is `high` or above AND the judge quotes the
  *     constitution sentence that admits a judged lane; operator otherwise
+ *
+ * One field, one meaning: `reserved_category_applies` is about the record, not
+ * about its claim, and only an explicit `false` releases — so a claim spelled
+ * oddly, or a wrong category named where another applies, cannot reach the
+ * session through a judge's `false`. A claimed category that falls below the
+ * line still needs the judge's `high`: the record may carry the very
+ * narrowing of decided text that made the claim, and the judge marks that
+ * recommendation `low`.
  *
  * Why a claimed category is judged too. A claim the ownership lens makes and
  * nobody tests goes to the operator unverified, which is the escape the panel
@@ -146,13 +157,13 @@ const JUDGEMENT = {
     confidence: { type: 'string', enum: CONFIDENCE },
     justification: { type: 'string', description: 'Why this level and not the next one up: each refuter objection, and whether it stands at source, with anchors.' },
     standing_objections: { type: 'array', items: { type: 'string' }, description: 'Refuter objections that hold at source. Empty if none.' },
-    category_holds: { type: 'boolean', description: 'True when the record\'s category claim survives the refutation at source: its `none`, or the reserved category it names. False when the claim falls — a reserved category the corpus does not support (for one that turns on what is undecided, a corpus sentence that decides the behavior), or a `none` where a reserved category applies.' },
-    category_ruling: { type: 'string', description: 'Why the claim holds or falls, with the deciding corpus sentences quoted with file and line.' },
+    reserved_category_applies: { type: 'boolean', description: 'True when ANY of the constitution\'s reserved categories applies to this record — the one it claims, or another it missed. False only when none applies at source (for a category that turns on what is undecided: a corpus sentence decides the behavior). It rules on the record, not on its claim.' },
+    category_ruling: { type: 'string', description: 'Which reserved category applies and why, or why none does, with the deciding corpus sentences quoted with file and line.' },
     lane_admitted: { type: 'boolean', description: 'True only when the constitution\'s operator-decision section admits a judged lane above its line FOR THIS RECORD: false when the section admits none, or when an exclusion it states reaches this record.' },
     lane_quote: { type: 'string', description: 'The sentence that admits it, quoted with file and line, and every exclusion it states with why this record is outside it; or the sentence that keeps this record with the operator.' },
   },
   required: ['confidence', 'justification', 'standing_objections',
-             'category_holds', 'category_ruling', 'lane_admitted', 'lane_quote'],
+             'reserved_category_applies', 'category_ruling', 'lane_admitted', 'lane_quote'],
 }
 const SESSION_FLOOR = CONFIDENCE.indexOf('high')
 
@@ -166,21 +177,19 @@ const reserved = (record) =>
   String(record.operator_axis || '').replace(/`/g, '').trim().toLowerCase() !== 'none'
 
 /*
- * A claimed category leaves the operator's side only on a judge's explicit
- * `category_holds === false`; a missing judgement or any other value keeps it
- * there. A `none` keeps the session's side below the line without a judge, as
- * before, and above it needs `category_holds === true` from the judge.
+ * Unjudged: only a `none` at or below the line reaches the session, as before.
+ * Judged: only an explicit `reserved_category_applies === false` leaves the
+ * operator's side, and then the judge's confidence must reach the floor — at
+ * or below the line on that alone, above it also on the admitted lane.
  */
 function route(record, judgement) {
-  if (reserved(record)) {
-    if (!judgement || judgement.category_holds !== false) return 'operator'
-    if (record.above_line === false) return 'session'
-  } else {
-    if (record.above_line === false) return 'session'
-    if (!judgement || judgement.category_holds !== true) return 'operator'
+  if (!judgement) {
+    return !reserved(record) && record.above_line === false ? 'session' : 'operator'
   }
-  if (record.above_line !== true) return 'operator'
+  if (judgement.reserved_category_applies !== false) return 'operator'
   const confident = CONFIDENCE.indexOf(judgement.confidence) >= SESSION_FLOOR
+  if (record.above_line === false) return confident ? 'session' : 'operator'
+  if (record.above_line !== true) return 'operator'
   return confident && judgement.lane_admitted === true ? 'session' : 'operator'
 }
 
@@ -213,7 +222,7 @@ function describe(item) {
   }
 }
 
-log(`od-gate: ${items.length} finding(s), ${items.length * 4 + 1} agents before the judged lane`)
+log(`od-gate: ${items.length} finding(s), ${items.length * 4 + 1} agents before the judged round`)
 
 phase('Lenses')
 
@@ -277,7 +286,7 @@ if (contested.length) {
       `${ROOTS}\n\n# Task — refute the record for ${record.key}\n\n`
       + `Your lens is **refute**. Apply it as your agent definition states it`
       + (reserved(record)
-        ? ` — this record claims a reserved category, so attack that claim first.\n\n`
+        ? ` — the record's \`operator_axis\` does not read \`none\`, so attack the category claim first.\n\n`
         : `.\n\n`)
       + `## The record\n\n\`\`\`json\n${JSON.stringify(record, null, 2)}\n\`\`\`\n\n`
       + `## The critic over the whole set\n\n${critique || '(the critic returned nothing)'}\n\n`
@@ -290,7 +299,7 @@ if (contested.length) {
       + `Your lens is **judge**. Apply it as your agent definition states it, and `
       + `emit the verdict through the structured output attached to this call.`
       + (reserved(prev.record)
-        ? ` This record claims a reserved category: rule \`category_holds\` first.\n\n`
+        ? ` The record's \`operator_axis\` does not read \`none\`: rule \`reserved_category_applies\` first.\n\n`
         : `\n\n`)
       + `## The record\n\n\`\`\`json\n${JSON.stringify(prev.record, null, 2)}\n\`\`\`\n\n`
       + `## The critic over the whole set\n\n${critique || '(the critic returned nothing)'}\n\n`

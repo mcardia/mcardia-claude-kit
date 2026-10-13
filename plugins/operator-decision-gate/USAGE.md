@@ -58,11 +58,10 @@ section is the interview, not the enforcement.
 then one critic across the set — `4N + 1` agents. A record graded above the
 constitution's line, or claiming a reserved category, then gets a refuter and a judge —
 two more agents each — and every record comes back with a `route`, `session` or
-`operator`. A claimed category stays `operator` unless the judge finds it false at
-source; one that falls is routed as if none had been claimed. Above the line the route is
-`session` only on a judge's confidence of `high` or above, and only where the
-constitution itself admits that lane in a sentence the judge quotes; without that
-sentence the route stays `operator`. Every record recommends the branch that conforms to
+`operator`. A judged record stays `operator` unless the judge rules that no reserved
+category applies to it and states a confidence of `high` or above; above the line the
+route is `session` only where, in addition, the constitution itself admits that lane in
+a sentence the judge quotes; without that sentence the route stays `operator`. Every record recommends the branch that conforms to
 what the corpus already decides, and prices the others, including any that would narrow
 or reverse decided text. It is saved as a workflow rather than
 re-authored per use because the cheapest path has to be the correct one, or it loses to
