@@ -47,7 +47,7 @@ section is the interview, not the enforcement.
 
 - **`od-lens`** — the adversarial examiner behind the command: the cause, remedy and
   ownership lenses, the synthesis role that writes the record, the critic role that
-  reads a whole set of records at once, and the refute and judge roles of the judged lane. It is the authority on what its own lenses mean;
+  reads a whole set of records at once, and the refute and judge roles that test a reserved-category claim and run the judged lane. It is the authority on what its own lenses mean;
   the skill and the workflow name a lens and never restate it, so there is one definition
   to keep true. It pins its effort in its definition and does not pin a model, because
   what a fleet of agents costs is the operator's call, not the plugin's.
@@ -56,11 +56,14 @@ section is the interview, not the enforcement.
 
 **`od-gate`** runs the operator-decision panel: three lenses per finding, a synthesiser,
 then one critic across the set — `4N + 1` agents. A record graded above the
-constitution's line that touches no reserved category then gets a refuter and a judge —
+constitution's line, or claiming a reserved category, then gets a refuter and a judge —
 two more agents each — and every record comes back with a `route`, `session` or
-`operator`. Above the line the route is `session` only on a judge's confidence of `high`
-or above, and only where the constitution itself admits that lane in a sentence the judge
-quotes; without that sentence the route stays `operator`. It is saved as a workflow rather than
+`operator`. A judged record stays `operator` unless the judge rules that no reserved
+category applies to it and states a confidence of `high` or above; above the line the
+route is `session` only where, in addition, the constitution itself admits that lane in
+a sentence the judge quotes; without that sentence the route stays `operator`. Every record recommends the branch that conforms to
+what the corpus already decides, and prices the others, including any that would narrow
+or reverse decided text. It is saved as a workflow rather than
 re-authored per use because the cheapest path has to be the correct one, or it loses to
 the shortcut. `/operator-decision-gate:od` invokes it as
 `Workflow({ name: "operator-decision-gate:od-gate", args: [ … ] })`; you can also run it
