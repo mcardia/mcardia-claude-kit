@@ -390,22 +390,39 @@ def _after_prefix(line, prefixes):
 
     Tolerant of the decoration a message carries around it — a list bullet, a
     blockquote marker, bold — and of nothing else. The prefix heads the line.
+
+    Two prefixes of the same set joined by `|` (`STOPPED | PARADO: ...`) are
+    one prefix: that is the shape a model copies out of a template listing
+    the alternatives, and refusing it would refuse the hook's own wording.
     """
     stripped = line.strip()
     while stripped[:1] in ("-", "*", ">", "#"):
         stripped = stripped[1:].lstrip()
-    lowered = stripped.lower()
+    rest = _strip_prefix(stripped, prefixes)
+    if rest is None:
+        return ""
+    if rest.startswith("|"):
+        rest = _strip_prefix(rest[1:].lstrip(), prefixes)
+        if rest is None:
+            return ""
+    if not rest.startswith(":"):
+        return ""
+    return rest[1:].strip()
+
+
+def _strip_prefix(text, prefixes):
+    """`text` after a leading prefix and any closing bold, or None."""
+    lowered = text.lower()
     for prefix in prefixes:
         token = prefix.lower()
         if not lowered.startswith(token):
             continue
-        rest = stripped[len(token):].lstrip()
+        rest = text[len(token):].lstrip()
         if rest.startswith("**"):
             rest = rest[2:].lstrip()
-        if not rest.startswith(":"):
-            continue
-        return rest[1:].strip()
-    return ""
+        if rest.startswith((":", "|")):
+            return rest
+    return None
 
 
 def scan(path, config, want_text=True):
@@ -449,9 +466,9 @@ def refusal(config):
     next act, and does not present stopping as a menu — the four reasons are
     named because the form requires one of them, not as an invitation.
     """
-    stopped = " | ".join(config["stopped_prefixes"])
-    in_flight = " | ".join(config["in_flight_prefixes"])
-    reasons = " | ".join(config["stop_reasons"])
+    stopped = config["stopped_prefixes"][0]
+    in_flight = config["in_flight_prefixes"][0]
+    reasons = ", ".join(f"`{reason}`" for reason in config["stop_reasons"])
     queue = f"{config['stopped_prefixes'][0]}: {config['stop_reasons'][0]}"
     return (
         f"AUTONOMY GRANT: a continuous grant is active and this turn does not "
@@ -459,9 +476,10 @@ def refusal(config):
         f"next tool call is cheaper than the paragraph defending its absence, "
         f"and is what the grant asked for. Default next act: start the next "
         f"unblocked item, now, in this same turn.\n"
-        f"Then put ONE line in the message:\n"
+        f"Then put ONE line in the message, of one of these two forms:\n"
         f"  {in_flight}: <what is running that will re-invoke this session>\n"
-        f"  {stopped}: <{reasons}>\n"
+        f"  {stopped}: <reason>\n"
+        f"where <reason> is one of: {reasons}.\n"
         f"`{queue}` is NOT assertible. It is discharged by an ACTION in this "
         f"same turn — reading whatever this project uses to decide what comes "
         f"next — and never by the claim. If a to-do list in this message "
