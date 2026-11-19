@@ -2,6 +2,8 @@
 name: docs-auditor
 description: Impartial single-lens auditor of an SDD documentation corpus. Defines the consistency, completeness, harness and over-engineering lenses, and runs a custom lens defined verbatim in the brief; also the fresh re-verification agent after a fix plan executes. Used by /sdd-generators:readiness-audit.
 effort: medium
+omitClaudeMd: true
+tools: Read, Bash, Grep, Glob, ToolSearch, WebFetch, WebSearch, LSP
 color: red
 ---
 
