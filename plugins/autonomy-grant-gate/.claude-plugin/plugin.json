@@ -1,7 +1,7 @@
 {
   "name": "autonomy-grant-gate",
   "description": "Refuses a turn that ends without declaring its own state, while a continuous autonomy grant is active",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "author": {
     "name": "Mario Cardia"
   }

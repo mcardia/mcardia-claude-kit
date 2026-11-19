@@ -132,6 +132,23 @@ CASES = [
      "- **EM VOO:** o executor da fase 2.\n\nAnd here is the rest.", (), 0),
     ("ALLOWED (compliant): the line is a list bullet",
      [("user", GRANT)], PLAIN + "\n- STOPPED: question", (), 0),
+    # Two prefixes of one set joined by `|` are the shape a model copies out
+    # of a template that lists the alternatives; refusing it refused the
+    # hook's own wording, hundreds of times in use.
+    ("ALLOWED (compliant): IN FLIGHT | EM VOO, with an agent running",
+     [("user", GRANT), ("launch", "01FFF")],
+     PLAIN + "\n\nIN FLIGHT | EM VOO: the phase-2 executor agent.", (), 0),
+    ("ALLOWED (compliant): STOPPED | PARADO: question",
+     [("user", GRANT)], PLAIN + "\nSTOPPED | PARADO: question", (), 0),
+    ("ALLOWED (compliant): **PARADO | STOPPED:** fila vazia",
+     [("user", GRANT)], PLAIN + "\n**PARADO | STOPPED:** fila vazia", (), 0),
+    ("blocks STOPPED | PARADO with a reason outside the closed set",
+     [("user", GRANT)], PLAIN + "\nSTOPPED | PARADO: work finished.", (), 2),
+    ("blocks IN FLIGHT | EM VOO that negates itself",
+     [("user", GRANT), ("launch", "01GGG")],
+     PLAIN + "\n\nIN FLIGHT | EM VOO: nothing", (), 2),
+    ("blocks a prefix joined to a word that is not a prefix",
+     [("user", GRANT)], PLAIN + "\nSTOPPED | DONE: question", (), 2),
 
     ("ALLOWED (no grant): nobody ever granted anything",
      [("user", "fix the login redirect")], PLAIN, (), 0),
@@ -269,6 +286,23 @@ def wording_case(suite):
                     "not assertible" in lowered and "queue empty" in lowered,
                     True, err[:120])
         suite.check("the refusal exits 2", code, 2, err)
+        lines = [line.strip() for line in err.splitlines()]
+        suite.check("the refusal shows each single form on its own line",
+                    any(line.startswith("IN FLIGHT: <") for line in lines)
+                    and "STOPPED: <reason>" in lines, True, err)
+        # The template, filled in literally, must pass: a gate that refuses
+        # its own wording teaches that the form is noise.
+        filled = [line.replace("<reason>", "question")
+                  for line in lines if line.startswith("STOPPED: <")]
+        code, err = run({
+            "cwd": root,
+            "transcript_path": transcript(root, [("user", GRANT)],
+                                          PLAIN + "\n" + "\n".join(filled),
+                                          name="filled.jsonl"),
+            "stop_hook_active": False,
+        })
+        suite.check("ALLOWED (compliant): the refusal's STOPPED template, "
+                    "filled in", code, 0, err)
     finally:
         shutil.rmtree(root, ignore_errors=True)
 
